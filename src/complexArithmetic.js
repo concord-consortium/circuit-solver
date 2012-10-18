@@ -4,7 +4,7 @@ var Complex = function(real, imag) {
 		return new Complex (real, imag);
 	}
 
-	if (typeof real === "string" && imag == null) {
+	if (typeof real === "string" && imag === null) {
 		return Complex.parse (real);
 	}
 
@@ -28,7 +28,7 @@ Complex.parse = function(string) {
 	b = match[2];
 	c = match[3];
 
-	real = a != null ? parseFloat (a) : 0;
+	real = a !== null ? parseFloat (a) : 0;
 	imag = parseFloat ((b || "+") + (c || "1"));
 
 	return new Complex(real, imag);
@@ -109,4 +109,4 @@ Complex.prototype.divide = function(operand) {
 Complex.prototype.inverse = function() {
 	var one = Complex (1,0);
 	return one.divide(this);
-}
+};

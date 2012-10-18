@@ -80,7 +80,7 @@ it("We can compute the complex impedance of a component", function() {
     expect(testComponent0.getImpedance(frequency).real).toBe(5000);
     expect(testComponent0.getImpedance(frequency).imag).toBe(0);
     expect(testComponent1.getImpedance(frequency).real).toBe(0);
-    expect(testComponent1.getImpedance(frequency).imag).toBeCloseTo(1/(twoPi*frequency*testComponent1.value));
+    expect(testComponent1.getImpedance(frequency).imag).toBeCloseTo(1/(2*Math.PI*frequency*testComponent1.value));
     expect(testComponent2.getImpedance(frequency).real).toBe(0);
     expect(testComponent2.getImpedance(frequency).imag).toBeCloseTo(0.251);
 })
