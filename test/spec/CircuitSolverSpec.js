@@ -55,12 +55,9 @@ describe("CircuitSolver", function() {
 			var testComponent1 = ciso.components[1];
 			var testComponent2 = ciso.components[2];
 			var frequency = 2000;
-			expect(testComponent0.getImpedance(frequency).real).toBe(5000);
-			expect(testComponent0.getImpedance(frequency).imag).toBe(0);
-			expect(testComponent1.getImpedance(frequency).real).toBe(0);
-			expect(testComponent1.getImpedance(frequency).imag).toBeCloseTo(1/(2*Math.PI*frequency*testComponent1.value));
-			expect(testComponent2.getImpedance(frequency).real).toBe(0);
-			expect(testComponent2.getImpedance(frequency).imag).toBeCloseTo(0.251);
+			expect(testComponent0.getImpedance(frequency)).toBeComplex(5000, 0);
+			expect(testComponent1.getImpedance(frequency)).toBeComplex(0, 1/(2*Math.PI*frequency*testComponent1.value));
+			expect(testComponent2.getImpedance(frequency)).toBeComplex(0, 0.251);
 		});
 
 	});
@@ -112,43 +109,32 @@ describe("CircuitSolver", function() {
 		it("We can compute the diagonal matrix element for a node", function() {
 			var testNode = ciso.nodes[1];
 			var frequency = ciso.acVoltageSources[0].frequency;
-			expect(ciso.getDiagonalMatrixElement(testNode, frequency).real).toBeCloseTo(0.0002);
-			expect(ciso.getDiagonalMatrixElement(testNode, frequency).imag).toBeCloseTo(-0.0125664);
+			expect(ciso.getDiagonalMatrixElement(testNode, frequency)).toBeComplex(0.0002, -0.0125664);
 			testNode = ciso.nodes[2];
-			expect(ciso.getDiagonalMatrixElement(testNode, frequency).real).toBeCloseTo(0);
-			expect(ciso.getDiagonalMatrixElement(testNode, frequency).imag).toBeCloseTo(-3.9914);
+			expect(ciso.getDiagonalMatrixElement(testNode, frequency)).toBeComplex(0, -3.9914);
 		});
 
 		it("We can compute the off-diagonal matrix element for a component", function() {
 			var frequency = ciso.acVoltageSources[0].frequency;
 			var testComponent = ciso.components[0];
-			expect(testComponent.getOffDiagonalMatrixElement(frequency).real).toBeCloseTo(0.0002);
-			expect(testComponent.getOffDiagonalMatrixElement(frequency).imag).toBeCloseTo(0);
+			expect(testComponent.getOffDiagonalMatrixElement(frequency)).toBeComplex(0.0002, 0);
 			testComponent = ciso.components[1]
-			expect(testComponent.getOffDiagonalMatrixElement(frequency).real).toBeCloseTo(0);
-			expect(testComponent.getOffDiagonalMatrixElement(frequency).imag).toBeCloseTo(-0.0125664);
+			expect(testComponent.getOffDiagonalMatrixElement(frequency)).toBeComplex(0, -0.0125664);
 		});
 
 		it("We can fill the G matrix", function() {
 			ciso.fillGMatrix();
-			expect (ciso.gMatrix[0][0].real).toBe(1/5000);
-			expect (ciso.gMatrix[0][0].imag).toBe(0);
-			expect (ciso.gMatrix[0][1].real).toBe(.0002);
-			expect (ciso.gMatrix[0][1].imag).toBe(0);
-			expect (ciso.gMatrix[1][1].real).toBe(.0002);
-			expect (ciso.gMatrix[1][1].imag).toBeCloseTo(-0.0125664);
+			expect (ciso.gMatrix[0][0]).toBeComplex(1/5000, 0);
+			expect (ciso.gMatrix[0][1]).toBeComplex(.0002, 0);
+			expect (ciso.gMatrix[1][1]).toBeComplex(.0002, -0.0125664);
 		});
 
 		it("We can augment the G matrix", function() {
 			ciso.augmentGMatrix();
-			expect (ciso.gMatrix[4][0].real).toBe(0);
-			expect (ciso.gMatrix[4][0].imag).toBe(0);
-			expect (ciso.gMatrix[4][3].real).toBe(1);
-			expect (ciso.gMatrix[4][3].imag).toBe(0);
-			expect (ciso.gMatrix[3][4].real).toBe(1);
-			expect (ciso.gMatrix[3][4].imag).toBe(0);
-			expect (ciso.gMatrix[4][4].real).toBe(0);
-			expect (ciso.gMatrix[4][4].imag).toBe(0);
+			expect (ciso.gMatrix[4][0]).toBeComplex(0, 0);
+			expect (ciso.gMatrix[4][3]).toBeComplex(1, 0);
+			expect (ciso.gMatrix[3][4]).toBeComplex(1, 0);
+			expect (ciso.gMatrix[4][4]).toBeComplex(0, 0);
 		});
 	});
 
