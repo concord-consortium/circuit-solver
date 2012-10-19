@@ -10,7 +10,7 @@ describe("CircuitSolver", function() {
 			firstComponentLabel = ciso.components[0].label;
 			firstComponentType = ciso.components[0].type;
 			firstComponentValue = ciso.components[0].value;
-			firstComponentNodes = ciso.components[0].nodeLabels;
+			firstComponentNodes = ciso.components[0].nodes;
 			expect(numComponents).toBe(1);
 			expect(firstComponentLabel).toBe("R1");
 			expect(firstComponentType).toBe("Resistor");
@@ -26,7 +26,7 @@ describe("CircuitSolver", function() {
 			secondComponentLabel = ciso.components[1].label;
 			secondComponentType = ciso.components[1].type;
 			secondComponentValue = ciso.components[1].value;
-			secondComponentNodes = ciso.components[1].nodeLabels;
+			secondComponentNodes = ciso.components[1].nodes;
 			expect(numComponents).toBe(2);
 			expect(secondComponentLabel).toBe("C1");
 			expect(secondComponentType).toBe("Capacitor");
@@ -41,7 +41,7 @@ describe("CircuitSolver", function() {
 			thirdComponentLabel = ciso.components[2].label;
 			thirdComponentType = ciso.components[2].type;
 			thirdComponentValue = ciso.components[2].value;
-			thirdComponentNodes = ciso.components[2].nodeLabels;
+			thirdComponentNodes = ciso.components[2].nodes;
 			expect(numComponents).toBe(3);
 			expect(thirdComponentLabel).toBe("L1");
 			expect(thirdComponentType).toBe("Inductor");
@@ -86,18 +86,17 @@ describe("CircuitSolver", function() {
 		ciso.addACVoltageSource("ACV1",15,"n1","n4",2000);
 
 		it("We can make a node list", function() {
-			ciso.makeNodeList();
-			expect(ciso.circuitNodes.length).toBe(4);
-			expect(ciso.circuitNodeLabels[1]).toBe("n2");
-			expect(ciso.circuitNodeLabels[2]).toBe("n3");
+			expect(ciso.nodes.length).toBe(4);
+			expect(ciso.nodes[1]).toBe("n2");
+			expect(ciso.nodes[2]).toBe("n3");
 		})
 
 		it("We can find the components that are linked to a node", function() {
-			var testNode = ciso.circuitNodes[2];
-			expect(testNode.label).toBe("n3");
+			var testNode = ciso.nodes[2];
+			expect(testNode).toBe("n3");
 			expect(ciso.getLinkedComponents(testNode)).toExist();
 			expect(ciso.getLinkedComponents(testNode).length).toBe(2);
-			expect(ciso.getLinkedComponents(testNode)[0].label).toBe("L1");
+			expect(ciso.getLinkedComponents(testNode)[1].label).toBe("L1");
 		});
 
 	});
@@ -109,14 +108,13 @@ describe("CircuitSolver", function() {
 		ciso.addComponent("C1", "Capacitor", 0.000001, ["n2", "n3"]);
 		ciso.addComponent("L1", "Inductor", 0.00002, ["n3", "n4"]);
 		ciso.addACVoltageSource("ACV1",15,"n1","n4",2000);
-		ciso.makeNodeList();
 
 		it("We can compute the diagonal matrix element for a node", function() {
-			var testNode = ciso.circuitNodes[1];
+			var testNode = ciso.nodes[1];
 			var frequency = ciso.acVoltageSources[0].frequency;
 			expect(ciso.getDiagonalMatrixElement(testNode, frequency).real).toBeCloseTo(0.0002);
 			expect(ciso.getDiagonalMatrixElement(testNode, frequency).imag).toBeCloseTo(-0.0125664);
-			testNode = ciso.circuitNodes[2];
+			testNode = ciso.nodes[2];
 			expect(ciso.getDiagonalMatrixElement(testNode, frequency).real).toBeCloseTo(0);
 			expect(ciso.getDiagonalMatrixElement(testNode, frequency).imag).toBeCloseTo(-3.9914);
 		});
