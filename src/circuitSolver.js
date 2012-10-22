@@ -130,7 +130,7 @@
 		for (i = 0; i < this.components.length; i++) {
 			rowIndex = this.getNodeIndexes(this.components[i])[0];
 			colIndex = this.getNodeIndexes(this.components[i])[1];
-			this.gMatrix[rowIndex][colIndex] = this.components[i].getOffDiagonalMatrixElement(frequency);
+			this.gMatrix[rowIndex][colIndex] = this.gMatrix[colIndex][rowIndex] = this.components[i].getOffDiagonalMatrixElement(frequency);
 		}
 	};
 
