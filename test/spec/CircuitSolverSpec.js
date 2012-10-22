@@ -124,9 +124,8 @@ describe("CircuitSolver", function() {
 
 		it("We can fill the G matrix", function() {
 			ciso.fillGMatrix();
-			expect (ciso.gMatrix[0][0]).toBeComplex(1/5000, 0);
-			expect (ciso.gMatrix[0][1]).toBeComplex(.0002, 0);
-			expect (ciso.gMatrix[1][1]).toBeComplex(.0002, -0.0125664);
+			expect (ciso.gMatrix[0]).toBeComplexArray([[.0002, 0], [.0002, 0        ], [0, 0       ]]);
+			expect (ciso.gMatrix[1]).toBeComplexArray([[.0002, 0], [.0002, -0.012567], [0, -0.01257]]);
 		});
 
 		it("We can augment the G matrix", function() {

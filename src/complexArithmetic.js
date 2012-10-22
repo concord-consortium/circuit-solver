@@ -110,3 +110,7 @@ Complex.prototype.inverse = function() {
 	var one = Complex (1,0);
 	return one.divide(this);
 };
+
+Complex.prototype.toString = function() {
+	return this.real + "i" + this.imag;
+};

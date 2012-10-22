@@ -33,11 +33,39 @@ beforeEach(function() {
       }
 
       function toSigFigs (num, sigFigs) {
-         num = num.toPrecision(sigFigs);
-         return sigFigs > Math.log(num) * Math.LOG10E ? num : ""+parseFloat(num);
-       }
+        num = num.toPrecision(sigFigs);
+        return sigFigs > Math.log(num) * Math.LOG10E ? num : ""+parseFloat(num);
+      }
 
       return (toSigFigs(act.real, 3) === toSigFigs(real, 3)) && (toSigFigs(act.imag, 3) === toSigFigs(imag, 3));
+    },
+    // checks an array of complexes against an equivalent array specified as [[r1,i1],[r2,i2],...]
+    toBeComplexArray: function (arr) {
+      var act = this.actual;
+      function toSig (num, sigFigs) {
+        num = num.toPrecision(sigFigs);
+        return sigFigs > Math.log(num) * Math.LOG10E ? num : ""+parseFloat(num);
+      }
+
+      this.message = function() {
+        var arrString = "[";
+        for (var i=0; i<arr.length; i++) {
+          arrString += arr[i][0] + "i" + arr[i][1]+",";
+        }
+        arrString = arrString.match(/.*[^,]/)[0] + "]";
+        return "Expected ["+act.toString()+"] to be "+arrString};
+
+      for (var i=0; i<arr.length; i++) {
+        var compare = arr[i];
+        var actual = act[i];
+        if (!actual) {
+          return false;
+        }
+        if (toSig(actual.real, 3) !== toSig(compare[0], 3) || toSig(actual.imag, 3) !== toSig(compare[1], 3)) {
+          return false;
+        }
+      }
+      return true;
     }
   });
 });
