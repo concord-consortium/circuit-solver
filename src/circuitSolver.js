@@ -9,7 +9,7 @@
 		this.dcVoltageSources = [];
 		this.acVoltageSources = [];
 		this.wires = [];
-		this.gMatrix = [];
+		this.matrix = [];
 	};
 
 	CiSo.prototype.getLinkedComponents = function (node) {
@@ -106,35 +106,35 @@
 		this.acVoltageSources.push(source);
 	};
 
-	CiSo.prototype.fillGMatrix = function (){
+	CiSo.prototype.createMatrix = function () {
+		var cZero = new Complex(0,0);
+		for (i = 0; i < this.nodes.length + 1; i++) {
+			this.matrix [i] = [];
+			for (j = 0; j < this.nodes.length + 1; j++) {
+				this.matrix[i][j] = cZero;
+			}
+		}
+	};
+
+	CiSo.prototype.addGMatrix = function (){
 		var source, frequency,
-				cZero,
 				i, j,
 				rowIndex, colIndex;
 		if (this.acVoltageSources.length > 0){
 			source = this.acVoltageSources[0];
 			frequency = source.frequency;
 		}
-		cZero = new Complex(0,0);
-		for (i = 0; i < this.nodes.length + 1; i++) {
-			this.gMatrix [i] = new Array(this.nodes.length + 1);
-		}
-		for (i = 0; i < this.nodes.length + 1; i++) {
-			for (j = 0; j < this.nodes.length + 1; j++) {
-				this.gMatrix[i][j] = cZero;
-			}
-		}
 		for (i = 0; i < this.nodes.length; i++){
-			this.gMatrix[i][i] = this.getDiagonalMatrixElement(this.nodes[i], frequency);
+			this.matrix[i][i] = this.getDiagonalMatrixElement(this.nodes[i], frequency);
 		}
 		for (i = 0; i < this.components.length; i++) {
 			rowIndex = this.getNodeIndexes(this.components[i])[0];
 			colIndex = this.getNodeIndexes(this.components[i])[1];
-			this.gMatrix[rowIndex][colIndex] = this.gMatrix[colIndex][rowIndex] = this.components[i].getOffDiagonalMatrixElement(frequency);
+			this.matrix[rowIndex][colIndex] = this.matrix[colIndex][rowIndex] = this.components[i].getOffDiagonalMatrixElement(frequency);
 		}
 	};
 
-	CiSo.prototype.augmentGMatrix = function (){
+	CiSo.prototype.addBMatrix = function (){
 		if (this.acVoltageSources.length === 0) return;
 
 		var one = new Complex(1,0),
@@ -145,8 +145,8 @@
 				voltageNodeIndex = this.nodes.indexOf(voltageNodeLabel),
 				groundNodeIndex = this.nodes.indexOf(groundNodeLabel);
 
-		this.gMatrix[this.nodes.length][voltageNodeIndex] = one;
-		this.gMatrix[voltageNodeIndex][this.nodes.length] = one;
+		this.matrix[this.nodes.length][voltageNodeIndex] = one;
+		this.matrix[voltageNodeIndex][this.nodes.length] = one;
 	};
 
 	window.CiSo = CiSo;

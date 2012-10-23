@@ -122,18 +122,19 @@ describe("CircuitSolver", function() {
 			expect(testComponent.getOffDiagonalMatrixElement(frequency)).toBeComplex(0, -0.0125664);
 		});
 
-		it("We can fill the G matrix", function() {
-			ciso.fillGMatrix();
-			expect (ciso.gMatrix[0]).toBeComplexArray([[.0002, 0], [.0002, 0        ], [0, 0       ]]);
-			expect (ciso.gMatrix[1]).toBeComplexArray([[.0002, 0], [.0002, -0.012567], [0, -0.01257]]);
+		it("We can add the G matrix", function() {
+			ciso.createMatrix();
+			ciso.addGMatrix();
+			expect (ciso.matrix[0]).toBeComplexArray([[.0002, 0], [.0002, 0        ], [0, 0       ]]);
+			expect (ciso.matrix[1]).toBeComplexArray([[.0002, 0], [.0002, -0.012567], [0, -0.01257]]);
 		});
 
-		it("We can augment the G matrix", function() {
-			ciso.augmentGMatrix();
-			expect (ciso.gMatrix[4][0]).toBeComplex(0, 0);
-			expect (ciso.gMatrix[4][3]).toBeComplex(1, 0);
-			expect (ciso.gMatrix[3][4]).toBeComplex(1, 0);
-			expect (ciso.gMatrix[4][4]).toBeComplex(0, 0);
+		it("We can add the B matrix", function() {
+			ciso.addBMatrix();
+			expect (ciso.matrix[4][0]).toBeComplex(0, 0);
+			expect (ciso.matrix[4][3]).toBeComplex(1, 0);
+			expect (ciso.matrix[3][4]).toBeComplex(1, 0);
+			expect (ciso.matrix[4][4]).toBeComplex(0, 0);
 		});
 	});
 
