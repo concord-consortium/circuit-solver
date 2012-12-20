@@ -60,7 +60,7 @@
 	};
 
 	Component.prototype.getOffDiagonalMatrixElement = function(freq) {
-		return this.getImpedance(freq).inverse();
+		return this.getImpedance(freq).inverse().negative();
 	};
 
 	var VoltageSource = function (label,voltage,positiveNode,negativeNode,frequency){

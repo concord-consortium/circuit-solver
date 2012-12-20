@@ -111,6 +111,11 @@ Complex.prototype.inverse = function() {
 	return one.divide(this);
 };
 
+Complex.prototype.negative = function() {
+	var zero = Complex (0,0);
+	return zero.subtract(this);
+};
+
 Complex.prototype.toString = function() {
 	return this.real + "i" + this.imag;
 };

@@ -127,16 +127,16 @@ describe("CircuitSolver", function() {
 		it("We can compute the off-diagonal matrix element for a component", function() {
 			var frequency = ciso.voltageSources[0].frequency;
 			var testComponent = ciso.components[0];
-			expect(testComponent.getOffDiagonalMatrixElement(frequency)).toBeComplex(0.0002, 0);
+			expect(testComponent.getOffDiagonalMatrixElement(frequency)).toBeComplex(-0.0002, 0);
 			testComponent = ciso.components[1]
-			expect(testComponent.getOffDiagonalMatrixElement(frequency)).toBeComplex(0, -0.0125664);
+			expect(testComponent.getOffDiagonalMatrixElement(frequency)).toBeComplex(0, 0.012566);
 		});
 
 		it("We can add the G matrix", function() {
 			ciso.createMatrix();
 			ciso.addGMatrix();
-			expect (ciso.matrix[0]).toBeComplexArray([[.0002, 0], [.0002, 0       ], [0, 0       ]]);
-			expect (ciso.matrix[1]).toBeComplexArray([[.0002, 0], [.0002, -0.01257], [0, -0.01257]]);
+			expect (ciso.matrix[0]).toBeComplexArray([[.0002, 0], [-0.0002, 0       ], [0, 0       ]]);
+			expect (ciso.matrix[1]).toBeComplexArray([[-0.0002, 0], [.0002, -0.01257], [0, 0.012566]]);
 		//	expect (ciso.matrix[2]).toBeComplexArray([[0, 0    ], [.0, -0.01257   ], [0, 0.2513  ]]);
 		});
 
