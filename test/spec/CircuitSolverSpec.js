@@ -108,7 +108,37 @@ describe("CircuitSolver", function() {
 
 	});
 
-	describe("Calculating matrices", function() {
+	describe("Calculating matrices for DC circuits", function() {
+
+		var ciso = new CiSo();
+		ciso.addComponent("R1", "Resistor", 5000, ["n1", "n2"]);
+		ciso.addComponent("R2", "Resistor", 2000, ["n2", "n3"]);
+		ciso.addComponent("R3", "Resistor", 1,    ["n3", "n4"]);
+		ciso.addVoltageSource("DCV1",15,"n1","n4");
+
+		it("We can compute the diagonal matrix element for a node", function() {
+			var testNode = ciso.nodes[0];
+			var frequency = ciso.voltageSources[0].frequency;
+			expect(ciso.getDiagonalMatrixElement(testNode, frequency)).toBeComplex(0.0002, 0);
+			testNode = ciso.nodes[1];
+			expect(ciso.getDiagonalMatrixElement(testNode, frequency)).toBeComplex(0.0007, 0);
+			testNode = ciso.nodes[2];
+			expect(ciso.getDiagonalMatrixElement(testNode, frequency)).toBeComplex(1.0005, 0);
+		});
+
+		it("We can compute the off-diagonal matrix element for a component", function() {
+			var frequency = ciso.voltageSources[0].frequency;
+			var testComponent = ciso.components[0];
+			expect(testComponent.getOffDiagonalMatrixElement(frequency)).toBeComplex(-0.0002, 0);
+			testComponent = ciso.components[1]
+			expect(testComponent.getOffDiagonalMatrixElement(frequency)).toBeComplex(-0.0005, 0);
+			testComponent = ciso.components[2]
+			expect(testComponent.getOffDiagonalMatrixElement(frequency)).toBeComplex(-1, 0);
+		});
+
+	});
+
+	describe("Calculating matrices for AC circuits", function() {
 
 		var ciso = new CiSo();
 		ciso.addComponent("R1", "Resistor", 5000, ["n1", "n2"]);
@@ -117,8 +147,10 @@ describe("CircuitSolver", function() {
 		ciso.addVoltageSource("ACV1",15,"n1","n4",2000);
 
 		it("We can compute the diagonal matrix element for a node", function() {
-			var testNode = ciso.nodes[1];
+			var testNode = ciso.nodes[0];
 			var frequency = ciso.voltageSources[0].frequency;
+			expect(ciso.getDiagonalMatrixElement(testNode, frequency)).toBeComplex(0.0002, 0);
+			testNode = ciso.nodes[1];
 			expect(ciso.getDiagonalMatrixElement(testNode, frequency)).toBeComplex(0.0002, -0.0125664);
 			testNode = ciso.nodes[2];
 			expect(ciso.getDiagonalMatrixElement(testNode, frequency)).toBeComplex(0, -3.9914);
