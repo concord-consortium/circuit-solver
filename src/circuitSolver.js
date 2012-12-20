@@ -6,8 +6,7 @@
 		this.components = [];
 		this.nodeMap = {};				// a map of nodes: {"n1": [comp1, comp2], "n2": [comp2, comp3] ...}
 		this.nodes = [];					// an array of all nodes
-		this.dcVoltageSources = [];
-		this.acVoltageSources = [];
+		this.voltageSources = [];
 		this.wires = [];
 		this.matrix = [];
 	};
@@ -64,18 +63,12 @@
 		return this.getImpedance(freq).inverse();
 	};
 
-	var DCVoltageSource = function (label,voltage,pos_node,neg_node){
+	var VoltageSource = function (label,voltage,positiveNode,negativeNode,frequency){
 		this.label = label;
 		this.voltage = voltage;
-		this.pos_node = pos_node;
-		this.neg_node = neg_node;
-	};
-
-	var ACVoltageSource = function (label,voltage,groundNodeLabel,voltageNodeLabel,frequency){
-		this.voltage = voltage;
-		this.groundNodeLabel = groundNodeLabel;
-		this.voltageNodeLabel = voltageNodeLabel;
-		this.frequency = frequency;
+		this.positiveNode = positiveNode;
+		this.negativeNode = negativeNode;
+		this.frequency = frequency || 0;
 	};
 
 	CiSo.prototype.addComponent = function (label,type,value,nodeLabels) {
@@ -96,14 +89,9 @@
 		}
 	};
 
-	CiSo.prototype.addDCVoltageSource = function (label,voltage,positiveNodeLabel,negativeNodeLabel) {
-		var source = new DCVoltageSource(label,voltage,positiveNodeLabel,negativeNodeLabel);
-		this.dcVoltageSources.push(source);
-	};
-
-	CiSo.prototype.addACVoltageSource = function (label,voltage,groundNodeLabel,voltageNodeLabel,frequency) {
-		var source = new ACVoltageSource(label,voltage,groundNodeLabel,voltageNodeLabel,frequency);
-		this.acVoltageSources.push(source);
+	CiSo.prototype.addVoltageSource = function (label,voltage,positiveNode,negativeNode,frequency) {
+		var source = new VoltageSource(label,voltage,positiveNode,negativeNode,frequency);
+		this.voltageSources.push(source);
 	};
 
 	CiSo.prototype.createMatrix = function () {
@@ -120,8 +108,8 @@
 		var source, frequency,
 				i, j,
 				rowIndex, colIndex;
-		if (this.acVoltageSources.length > 0){
-			source = this.acVoltageSources[0];
+		if (this.voltageSources.length > 0){
+			source = this.voltageSources[0];
 			frequency = source.frequency;
 		}
 		for (i = 0; i < this.nodes.length; i++){
@@ -135,10 +123,10 @@
 	};
 
 	CiSo.prototype.addBMatrix = function (){
-		if (this.acVoltageSources.length === 0) return;
+		if (this.voltageSources.length === 0) return;
 
 		var one = new Complex(1,0),
-				source = this.acVoltageSources[0],
+				source = this.voltageSources[0],
 				frequency = source.frequency,
 				voltageNodeLabel = source.voltageNodeLabel,
 				groundNodeLabel = source.groundNodeLabel,

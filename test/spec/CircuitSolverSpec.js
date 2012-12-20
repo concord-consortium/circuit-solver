@@ -63,15 +63,25 @@ describe("CircuitSolver", function() {
 	});
 
 	describe("Adding voltage sources", function() {
+		it("We can add an DC voltage source", function() {
+			var ciso = new CiSo();
+			ciso.addVoltageSource("DCV1",15,"n1","n4");
+			expect(ciso.voltageSources.length).toBe(1);
+			expect(ciso.voltageSources[0].voltage).toBe(15);
+			expect(ciso.voltageSources[0].positiveNode).toBe("n1");
+			expect(ciso.voltageSources[0].negativeNode).toBe("n4");
+			expect(ciso.voltageSources[0].frequency).toBe(0);
+		})
+
 		it("We can add an AC voltage source", function() {
 			var ciso = new CiSo();
-			ciso.addACVoltageSource("ACV1",15,"n1","n4",2000);
-			expect(ciso.acVoltageSources.length).toBe(1);
-			expect(ciso.acVoltageSources[0].voltage).toBe(15);
-			expect(ciso.acVoltageSources[0].groundNodeLabel).toBe("n1");
-			expect(ciso.acVoltageSources[0].voltageNodeLabel).toBe("n4");
-			expect(ciso.acVoltageSources[0].frequency).toBe(2000);
-		})
+			ciso.addVoltageSource("ACV1",15,"n1","n4",2000);
+			expect(ciso.voltageSources.length).toBe(1);
+			expect(ciso.voltageSources[0].voltage).toBe(15);
+			expect(ciso.voltageSources[0].positiveNode).toBe("n1");
+			expect(ciso.voltageSources[0].negativeNode).toBe("n4");
+			expect(ciso.voltageSources[0].frequency).toBe(2000);
+		});
 	});
 
 	describe("Node lists", function() {
@@ -80,7 +90,7 @@ describe("CircuitSolver", function() {
 		ciso.addComponent("R1", "Resistor", 5000, ["n1", "n2"]);
 		ciso.addComponent("C1", "Capacitor", 0.000001, ["n2", "n3"]);
 		ciso.addComponent("L1", "Inductor", 0.00002, ["n3", "n4"]);
-		ciso.addACVoltageSource("ACV1",15,"n1","n4",2000);
+		ciso.addVoltageSource("ACV1",15,"n1","n4",2000);
 
 		it("We can make a node list", function() {
 			expect(ciso.nodes.length).toBe(4);
@@ -104,18 +114,18 @@ describe("CircuitSolver", function() {
 		ciso.addComponent("R1", "Resistor", 5000, ["n1", "n2"]);
 		ciso.addComponent("C1", "Capacitor", 0.000001, ["n2", "n3"]);
 		ciso.addComponent("L1", "Inductor", 0.00002, ["n3", "n4"]);
-		ciso.addACVoltageSource("ACV1",15,"n1","n4",2000);
+		ciso.addVoltageSource("ACV1",15,"n1","n4",2000);
 
 		it("We can compute the diagonal matrix element for a node", function() {
 			var testNode = ciso.nodes[1];
-			var frequency = ciso.acVoltageSources[0].frequency;
+			var frequency = ciso.voltageSources[0].frequency;
 			expect(ciso.getDiagonalMatrixElement(testNode, frequency)).toBeComplex(0.0002, -0.0125664);
 			testNode = ciso.nodes[2];
 			expect(ciso.getDiagonalMatrixElement(testNode, frequency)).toBeComplex(0, -3.9914);
 		});
 
 		it("We can compute the off-diagonal matrix element for a component", function() {
-			var frequency = ciso.acVoltageSources[0].frequency;
+			var frequency = ciso.voltageSources[0].frequency;
 			var testComponent = ciso.components[0];
 			expect(testComponent.getOffDiagonalMatrixElement(frequency)).toBeComplex(0.0002, 0);
 			testComponent = ciso.components[1]
