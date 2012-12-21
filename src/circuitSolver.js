@@ -9,6 +9,8 @@
 		this.voltageSources = [];
 		this.wires = [];
 		this.matrix = [];
+		this.referenceNode = null;
+		this.referenceNodeIndex = null;
 	};
 
 	CiSo.prototype.getLinkedComponents = function (node) {
@@ -28,9 +30,16 @@
 
 	CiSo.prototype.getNodeIndexes = function(component) {
 		var indexes = [];
-		indexes[0] = this.nodes.indexOf(component.nodes[0]);
-		indexes[1] = this.nodes.indexOf(component.nodes[1]);
+		indexes[0] = this.getNodeIndex(component.nodes[0]);
+		indexes[1] = this.getNodeIndex(component.nodes[1]);
 		return indexes;
+	};
+
+	CiSo.prototype.getNodeIndex = function(node) {
+		var index = this.nodes.indexOf(node);
+		if (index > this.referenceNodeIndex)
+			return index - 1;
+		return index;
 	};
 
 	var Component = function(label, type, value, nodes) {
@@ -92,7 +101,26 @@
 	CiSo.prototype.addVoltageSource = function (label,voltage,positiveNode,negativeNode,frequency) {
 		var source = new VoltageSource(label,voltage,positiveNode,negativeNode,frequency);
 		this.voltageSources.push(source);
+
+		if (!this.nodeMap[positiveNode]) {
+			this.nodeMap[positiveNode] = [];
+			this.nodes.push(positiveNode);
+		}
+
+		if (!this.nodeMap[negativeNode]) {
+			this.nodeMap[negativeNode] = [];
+			this.nodes.push(negativeNode);
+		}
+
+		if (!this.referenceNode) {
+			this.setReferenceNode(negativeNode);
+		}
 	};
+
+	CiSo.prototype.setReferenceNode = function(node) {
+		this.referenceNode = node;
+		this.referenceNodeIndex = this.nodes.indexOf(node);
+	}
 
 	CiSo.prototype.createMatrix = function () {
 		var cZero = new Complex(0,0);

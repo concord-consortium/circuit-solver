@@ -82,6 +82,14 @@ describe("CircuitSolver", function() {
 			expect(ciso.voltageSources[0].negativeNode).toBe("n4");
 			expect(ciso.voltageSources[0].frequency).toBe(2000);
 		});
+
+		it("Adding a voltage source will set a reference node", function() {
+			var ciso = new CiSo();
+			expect(ciso.referenceNode).toBe(null);
+			ciso.addVoltageSource("ACV1",15,"n1","n4",2000);
+			expect(ciso.referenceNode).toBe("n4");
+			expect(ciso.referenceNodeIndex).toBe(1);
+		});
 	});
 
 	describe("Node lists", function() {
@@ -104,6 +112,24 @@ describe("CircuitSolver", function() {
 			expect(ciso.getLinkedComponents(testNode)).toExist();
 			expect(ciso.getLinkedComponents(testNode).length).toBe(2);
 			expect(ciso.getLinkedComponents(testNode)[1].label).toBe("L1");
+		});
+
+		it("We can get the index of nodes", function() {
+			expect(ciso.getNodeIndex("n1")).toBe(0)
+			expect(ciso.getNodeIndex("n2")).toBe(1)
+			expect(ciso.getNodeIndex("n3")).toBe(2)
+		});
+
+		it("We can get the index of nodes and skip the reference node", function() {
+			var ciso = new CiSo();
+			ciso.addComponent("R1", "Resistor", 5000, ["n1", "n2"]);
+			ciso.addVoltageSource("ACV1",15,"n2","n3",2000);
+			ciso.addComponent("C1", "Capacitor", 0.000001, ["n3", "n4"]);
+			ciso.addComponent("L1", "Inductor", 0.00002, ["n4", "n1"]);
+
+			expect(ciso.getNodeIndex("n1")).toBe(0)
+			expect(ciso.getNodeIndex("n2")).toBe(1)
+			expect(ciso.getNodeIndex("n4")).toBe(2)
 		});
 
 	});
