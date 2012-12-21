@@ -170,11 +170,15 @@ describe("CircuitSolver", function() {
 			expect (ciso.matrix[2]).toBeComplexArray([[ 0, 0     ], [-0.0005, 0], [ 1.0005, 0]]);
 		});
 
-		it("We can add the B matrix", function() {
-			ciso.addBMatrix();
+		it("We can add the B and C matrices", function() {
+			ciso.addBCMatrix();
 			expect (ciso.matrix[3][0]).toBeComplex(1, 0);
 			expect (ciso.matrix[3][1]).toBeComplex(0, 0);
 			expect (ciso.matrix[3][2]).toBeComplex(0, 0);
+
+			expect (ciso.matrix[0][3]).toBeComplex(1, 0);
+			expect (ciso.matrix[1][3]).toBeComplex(0, 0);
+			expect (ciso.matrix[2][3]).toBeComplex(0, 0);
 		});
 	});
 

@@ -160,7 +160,7 @@
 		}
 	};
 
-	CiSo.prototype.addBMatrix = function (){
+	CiSo.prototype.addBCMatrix = function (){
 		if (this.voltageSources.length === 0) return;
 
 		var one = new Complex(1,0),
@@ -174,11 +174,13 @@
 			if (posNode !== this.referenceNode) {
 				nodeIndex = this.getNodeIndex(posNode);
 				this.matrix[this.nodes.length - 1 + i][nodeIndex] = one;
+				this.matrix[nodeIndex][this.nodes.length - 1 + i] = one;
 			}
 			negNode = source.negativeNode;
 			if (negNode !== this.referenceNode) {
 				nodeIndex = this.getNodeIndex(negNode);
 				this.matrix[this.nodes.length - 1 + i][nodeIndex] = neg;
+				this.matrix[nodeIndex][this.nodes.length - 1 + i] = neg;
 			}
 		}
 	};
