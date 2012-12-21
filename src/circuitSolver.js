@@ -192,5 +192,24 @@
 		}
 	};
 
+	CiSo.prototype.createZMatrix = function () {
+		var cZero = new Complex(0,0),
+				numNodes = this.nodes.length,
+				numSources = this.voltageSources.length,
+				arraySize = numNodes - 1 + numSources,
+				sources = this.voltageSources,
+				i;
+
+		this.ZMatrix[0] = []
+
+		for (i=0; i<arraySize; i++) {
+			this.ZMatrix[0][i] = cZero.copy()
+		}
+
+		for (i = 0; i < sources.length; i++) {
+			this.ZMatrix[0][numNodes - 1 + i].real = sources[i].voltage;
+		}
+	}
+
 	window.CiSo = CiSo;
 })();

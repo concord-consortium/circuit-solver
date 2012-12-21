@@ -189,6 +189,12 @@ describe("CircuitSolver", function() {
 			expect (ciso.AMatrix[2]).toBeComplexArray([[ 0, 0     ], [-0.0005, 0], [ 1.0005, 0], [ 0, 0 ]]);
 			expect (ciso.AMatrix[3]).toBeComplexArray([[ 1, 0     ], [ 0, 0     ], [ 0, 0     ], [ 0, 0 ]]);
 		});
+
+		it("We can generate the Z matrix", function() {
+			ciso.createZMatrix();
+
+			expect (ciso.ZMatrix[0]).toBeComplexArray([[0, 0], [0, 0], [0, 0], [15, 0]]);
+		});
 	});
 
 	describe("Calculating matrices for AC circuits", function() {
