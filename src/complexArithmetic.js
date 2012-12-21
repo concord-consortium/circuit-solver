@@ -107,12 +107,12 @@ Complex.prototype.divide = function(operand) {
 };
 
 Complex.prototype.inverse = function() {
-	var one = Complex (1,0);
+	var one = new Complex (1,0);
 	return one.divide(this);
 };
 
 Complex.prototype.negative = function() {
-	var zero = Complex (0,0);
+	var zero = new Complex (0,0);
 	return zero.subtract(this);
 };
 

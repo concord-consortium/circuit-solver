@@ -9,6 +9,7 @@
 		this.voltageSources = [];
 		this.wires = [];
 		this.AMatrix = [];
+		this.ZMatrix = [];
 		this.referenceNode = null;
 		this.referenceNodeIndex = null;
 	};
@@ -138,7 +139,7 @@
 		for (i = 0; i < arraySize; i++) {
 			this.AMatrix [i] = [];
 			for (j = 0; j < arraySize; j++) {
-				this.AMatrix[i][j] = cZero;
+				this.AMatrix[i][j] = cZero.copy();
 			}
 		}
 	};
@@ -179,14 +180,14 @@
 			posNode = source.positiveNode;
 			if (posNode !== this.referenceNode) {
 				nodeIndex = this.getNodeIndex(posNode);
-				this.AMatrix[this.nodes.length - 1 + i][nodeIndex] = one;
-				this.AMatrix[nodeIndex][this.nodes.length - 1 + i] = one;
+				this.AMatrix[this.nodes.length - 1 + i][nodeIndex] = one.copy();
+				this.AMatrix[nodeIndex][this.nodes.length - 1 + i] = one.copy();
 			}
 			negNode = source.negativeNode;
 			if (negNode !== this.referenceNode) {
 				nodeIndex = this.getNodeIndex(negNode);
-				this.AMatrix[this.nodes.length - 1 + i][nodeIndex] = neg;
-				this.AMatrix[nodeIndex][this.nodes.length - 1 + i] = neg;
+				this.AMatrix[this.nodes.length - 1 + i][nodeIndex] = neg.copy();
+				this.AMatrix[nodeIndex][this.nodes.length - 1 + i] = neg.copy();
 			}
 		}
 	};
