@@ -163,7 +163,7 @@ describe("CircuitSolver", function() {
 		});
 
 		it("We can add the G matrix", function() {
-			ciso.createMatrix();
+			ciso.createEmptyMatrix();
 			ciso.addGMatrix();
 			expect (ciso.matrix[0]).toBeComplexArray([[ 0.0002, 0], [-0.0002, 0], [ 0, 0     ]]);
 			expect (ciso.matrix[1]).toBeComplexArray([[-0.0002, 0], [ 0.0007, 0], [-0.0005, 0]]);
@@ -179,6 +179,15 @@ describe("CircuitSolver", function() {
 			expect (ciso.matrix[0][3]).toBeComplex(1, 0);
 			expect (ciso.matrix[1][3]).toBeComplex(0, 0);
 			expect (ciso.matrix[2][3]).toBeComplex(0, 0);
+		});
+
+		it("We can directly generate the circuit matrix", function() {
+			ciso.createMatrix();
+
+			expect (ciso.matrix[0]).toBeComplexArray([[ 0.0002, 0], [-0.0002, 0], [ 0, 0     ], [ 1, 0 ]]);
+			expect (ciso.matrix[1]).toBeComplexArray([[-0.0002, 0], [ 0.0007, 0], [-0.0005, 0], [ 0, 0 ]]);
+			expect (ciso.matrix[2]).toBeComplexArray([[ 0, 0     ], [-0.0005, 0], [ 1.0005, 0], [ 0, 0 ]]);
+			expect (ciso.matrix[3]).toBeComplexArray([[ 1, 0     ], [ 0, 0     ], [ 0, 0     ], [ 0, 0 ]]);
 		});
 	});
 
@@ -209,20 +218,12 @@ describe("CircuitSolver", function() {
 		});
 
 		it("We can add the G matrix", function() {
-			ciso.createMatrix();
+			ciso.createEmptyMatrix();
 			ciso.addGMatrix();
-			expect (ciso.matrix[0]).toBeComplexArray([[.0002, 0], [-0.0002, 0       ], [0, 0       ]]);
-			expect (ciso.matrix[1]).toBeComplexArray([[-0.0002, 0], [.0002, -0.01257], [0, 0.012566]]);
-		//	expect (ciso.matrix[2]).toBeComplexArray([[0, 0    ], [.0, -0.01257   ], [0, 0.2513  ]]);
+			expect (ciso.matrix[0]).toBeComplexArray([[ 0.0002, 0], [-0.0002, 0       ], [0, 0       ]]);
+			expect (ciso.matrix[1]).toBeComplexArray([[-0.0002, 0], [ 0.0002, -0.01257], [0, 0.012566]]);
+			expect (ciso.matrix[2]).toBeComplexArray([[ 0, 0     ], [ 0, 0.012566     ], [0, -3.99143]]);
 		});
-
-		// it("We can add the B matrix", function() {
-		// 	ciso.addBMatrix();
-		// 	expect (ciso.matrix[4][0]).toBeComplex(0, 0);
-		// 	expect (ciso.matrix[4][3]).toBeComplex(1, 0);
-		// 	expect (ciso.matrix[3][4]).toBeComplex(1, 0);
-		// 	expect (ciso.matrix[4][4]).toBeComplex(0, 0);
-		// });
 	});
 
 });

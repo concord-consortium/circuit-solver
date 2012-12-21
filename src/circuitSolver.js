@@ -120,9 +120,15 @@
 	CiSo.prototype.setReferenceNode = function(node) {
 		this.referenceNode = node;
 		this.referenceNodeIndex = this.nodes.indexOf(node);
-	}
+	};
 
 	CiSo.prototype.createMatrix = function () {
+		this.createEmptyMatrix();
+		this.addGMatrix();
+		this.addBCMatrix();
+	};
+
+	CiSo.prototype.createEmptyMatrix = function () {
 		var cZero = new Complex(0,0),
 				numNodes = this.nodes.length,
 				numSources = this.voltageSources.length,
