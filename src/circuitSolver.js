@@ -8,7 +8,7 @@
 		this.nodes = [];					// an array of all nodes
 		this.voltageSources = [];
 		this.wires = [];
-		this.matrix = [];
+		this.AMatrix = [];
 		this.referenceNode = null;
 		this.referenceNodeIndex = null;
 	};
@@ -122,13 +122,13 @@
 		this.referenceNodeIndex = this.nodes.indexOf(node);
 	};
 
-	CiSo.prototype.createMatrix = function () {
-		this.createEmptyMatrix();
+	CiSo.prototype.createAMatrix = function () {
+		this.createEmptyAMatrix();
 		this.addGMatrix();
 		this.addBCMatrix();
 	};
 
-	CiSo.prototype.createEmptyMatrix = function () {
+	CiSo.prototype.createEmptyAMatrix = function () {
 		var cZero = new Complex(0,0),
 				numNodes = this.nodes.length,
 				numSources = this.voltageSources.length,
@@ -136,9 +136,9 @@
 				i, j;
 
 		for (i = 0; i < arraySize; i++) {
-			this.matrix [i] = [];
+			this.AMatrix [i] = [];
 			for (j = 0; j < arraySize; j++) {
-				this.matrix[i][j] = cZero;
+				this.AMatrix[i][j] = cZero;
 			}
 		}
 	};
@@ -156,13 +156,13 @@
 			node = this.nodes[i];
 			if (node === this.referenceNode) continue;
 			index = this.getNodeIndex(node);
-			this.matrix[index][index] = this.getDiagonalMatrixElement(node, frequency);
+			this.AMatrix[index][index] = this.getDiagonalMatrixElement(node, frequency);
 		}
 		for (i = 0; i < this.components.length; i++) {
 			rowIndex = this.getNodeIndexes(this.components[i])[0];
 			colIndex = this.getNodeIndexes(this.components[i])[1];
 			if (rowIndex === this.referenceNodeIndex || colIndex === this.referenceNodeIndex) continue;
-			this.matrix[rowIndex][colIndex] = this.matrix[colIndex][rowIndex] = this.components[i].getOffDiagonalMatrixElement(frequency);
+			this.AMatrix[rowIndex][colIndex] = this.AMatrix[colIndex][rowIndex] = this.components[i].getOffDiagonalMatrixElement(frequency);
 		}
 	};
 
@@ -179,14 +179,14 @@
 			posNode = source.positiveNode;
 			if (posNode !== this.referenceNode) {
 				nodeIndex = this.getNodeIndex(posNode);
-				this.matrix[this.nodes.length - 1 + i][nodeIndex] = one;
-				this.matrix[nodeIndex][this.nodes.length - 1 + i] = one;
+				this.AMatrix[this.nodes.length - 1 + i][nodeIndex] = one;
+				this.AMatrix[nodeIndex][this.nodes.length - 1 + i] = one;
 			}
 			negNode = source.negativeNode;
 			if (negNode !== this.referenceNode) {
 				nodeIndex = this.getNodeIndex(negNode);
-				this.matrix[this.nodes.length - 1 + i][nodeIndex] = neg;
-				this.matrix[nodeIndex][this.nodes.length - 1 + i] = neg;
+				this.AMatrix[this.nodes.length - 1 + i][nodeIndex] = neg;
+				this.AMatrix[nodeIndex][this.nodes.length - 1 + i] = neg;
 			}
 		}
 	};
