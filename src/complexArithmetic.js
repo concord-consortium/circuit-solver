@@ -48,10 +48,7 @@ Complex.prototype.add = function(operand) {
 		real = Number(operand);
 		imag = 0;
 	}
-	this.real += real;
-	this.imag += imag;
-
-	return this;
+	return new Complex(this.real + real, this.imag + imag);
 };
 
 Complex.prototype.subtract = function(operand) {
@@ -64,13 +61,11 @@ Complex.prototype.subtract = function(operand) {
 		real = Number(operand);
 		imag = 0;
 	}
-	this.real -= real;
-	this.imag -= imag;
-
-	return this;
+	return new Complex(this.real - real, this.imag - imag);
 };
+
 Complex.prototype.multiply = function(operand) {
-	var real, imag, tmp;
+	var real, imag, newReal, newImag;
 
 	if (operand instanceof Complex) {
 		real = operand.real;
@@ -80,15 +75,14 @@ Complex.prototype.multiply = function(operand) {
 		imag = 0;
 	}
 
-	tmp = this.real * real - this.imag * imag;
-	this.imag = this.real * imag + this.imag * real;
-	this.real = tmp;
+	newReal = this.real * real - this.imag * imag;
+	newImag = this.real * imag + this.imag * real
 
-	return this;
+	return new Complex(newReal, newImag);
 };
 
 Complex.prototype.divide = function(operand) {
-	var real, imag, denom, tmp;
+	var real, imag, denom, newReal, newImag;
 
 	if (operand instanceof Complex) {
 		real = operand.real;
@@ -99,11 +93,10 @@ Complex.prototype.divide = function(operand) {
 	}
 
 	denom = real * real + imag * imag;
-	tmp = (this.real * real + this.imag * imag) / denom;
-	this.imag = (this.imag * real - this.real * imag) / denom;
-	this.real = tmp;
+	newReal = (this.real * real + this.imag * imag) / denom;
+	newImag = (this.imag * real - this.real * imag) / denom;
 
-	return this;
+	return new Complex(newReal, newImag);
 };
 
 Complex.prototype.inverse = function() {
