@@ -162,6 +162,20 @@ describe("CircuitSolver", function() {
 			expect(testComponent.getOffDiagonalMatrixElement(frequency)).toBeComplex(-1, 0);
 		});
 
+		it("We can add the G matrix", function() {
+			ciso.createMatrix();
+			ciso.addGMatrix();
+			expect (ciso.matrix[0]).toBeComplexArray([[ 0.0002, 0], [-0.0002, 0], [ 0, 0     ]]);
+			expect (ciso.matrix[1]).toBeComplexArray([[-0.0002, 0], [ 0.0007, 0], [-0.0005, 0]]);
+			expect (ciso.matrix[2]).toBeComplexArray([[ 0, 0     ], [-0.0005, 0], [ 1.0005, 0]]);
+		});
+
+		it("We can add the B matrix", function() {
+			ciso.addBMatrix();
+			expect (ciso.matrix[3][0]).toBeComplex(1, 0);
+			expect (ciso.matrix[3][1]).toBeComplex(0, 0);
+			expect (ciso.matrix[3][2]).toBeComplex(0, 0);
+		});
 	});
 
 	describe("Calculating matrices for AC circuits", function() {

@@ -123,10 +123,15 @@
 	}
 
 	CiSo.prototype.createMatrix = function () {
-		var cZero = new Complex(0,0);
-		for (i = 0; i < this.nodes.length + 1; i++) {
+		var cZero = new Complex(0,0),
+				numNodes = this.nodes.length,
+				numSources = this.voltageSources.length,
+				arraySize = numNodes - 1 + numSources,
+				i, j;
+
+		for (i = 0; i < arraySize; i++) {
 			this.matrix [i] = [];
-			for (j = 0; j < this.nodes.length + 1; j++) {
+			for (j = 0; j < arraySize; j++) {
 				this.matrix[i][j] = cZero;
 			}
 		}
@@ -135,17 +140,22 @@
 	CiSo.prototype.addGMatrix = function (){
 		var source, frequency,
 				i, j,
+				node, index,
 				rowIndex, colIndex;
 		if (this.voltageSources.length > 0){
 			source = this.voltageSources[0];
 			frequency = source.frequency;
 		}
 		for (i = 0; i < this.nodes.length; i++){
-			this.matrix[i][i] = this.getDiagonalMatrixElement(this.nodes[i], frequency);
+			node = this.nodes[i];
+			if (node === this.referenceNode) continue;
+			index = this.getNodeIndex(node);
+			this.matrix[index][index] = this.getDiagonalMatrixElement(node, frequency);
 		}
 		for (i = 0; i < this.components.length; i++) {
 			rowIndex = this.getNodeIndexes(this.components[i])[0];
 			colIndex = this.getNodeIndexes(this.components[i])[1];
+			if (rowIndex === this.referenceNodeIndex || colIndex === this.referenceNodeIndex) continue;
 			this.matrix[rowIndex][colIndex] = this.matrix[colIndex][rowIndex] = this.components[i].getOffDiagonalMatrixElement(frequency);
 		}
 	};
@@ -154,15 +164,23 @@
 		if (this.voltageSources.length === 0) return;
 
 		var one = new Complex(1,0),
-				source = this.voltageSources[0],
-				frequency = source.frequency,
-				voltageNodeLabel = source.voltageNodeLabel,
-				groundNodeLabel = source.groundNodeLabel,
-				voltageNodeIndex = this.nodes.indexOf(voltageNodeLabel),
-				groundNodeIndex = this.nodes.indexOf(groundNodeLabel);
+				neg = one.negative(),
+				sources = this.voltageSources,
+				source, posNode, negNode, nodeIndex, i;
 
-		this.matrix[this.nodes.length][voltageNodeIndex] = one;
-		this.matrix[voltageNodeIndex][this.nodes.length] = one;
+		for (i = 0; i < sources.length; i++) {
+			source = sources[i];
+			posNode = source.positiveNode;
+			if (posNode !== this.referenceNode) {
+				nodeIndex = this.getNodeIndex(posNode);
+				this.matrix[this.nodes.length - 1 + i][nodeIndex] = one;
+			}
+			negNode = source.negativeNode;
+			if (negNode !== this.referenceNode) {
+				nodeIndex = this.getNodeIndex(negNode);
+				this.matrix[this.nodes.length - 1 + i][nodeIndex] = neg;
+			}
+		}
 	};
 
 	window.CiSo = CiSo;
