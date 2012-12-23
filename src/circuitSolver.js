@@ -163,7 +163,7 @@
 			rowIndex = this.getNodeIndexes(this.components[i])[0];
 			colIndex = this.getNodeIndexes(this.components[i])[1];
 			if (rowIndex === this.referenceNodeIndex || colIndex === this.referenceNodeIndex) continue;
-			this.AMatrix[rowIndex][colIndex] = this.AMatrix[colIndex][rowIndex] = this.components[i].getOffDiagonalMatrixElement(frequency);
+			this.AMatrix[rowIndex][colIndex] = this.AMatrix[colIndex][rowIndex] = this.AMatrix[rowIndex][colIndex].add(this.components[i].getOffDiagonalMatrixElement(frequency));
 		}
 	};
 

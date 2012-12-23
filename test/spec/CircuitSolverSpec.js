@@ -302,6 +302,76 @@ describe("CircuitSolver", function() {
 			var i = ciso.getCurrent();
 			expect(i).toBeAbout(-0.048);
 		});
+
+		it("We can solve a 3-resistor series-parallel circuit", function() {
+			var ciso = new CiSo();
+			ciso.addComponent("R1", "Resistor", 1000, ["n1", "n2"]);
+			ciso.addComponent("R2", "Resistor", 1000, ["n2", "n3"]);
+			ciso.addComponent("R3", "Resistor", 1000, ["n2", "n3"]);
+			ciso.addVoltageSource("DCV1",12,"n1","n3");
+
+			var v1 = ciso.getVoltageAt("n1");
+			expect(v1).toBe(12);
+			var v2 = ciso.getVoltageAt("n2");
+			expect(v2).toBe(4);
+			var i = ciso.getCurrent();
+			expect(i).toBeAbout(-0.008);
+
+			ciso = new CiSo();
+			ciso.addComponent("R1", "Resistor", 1000, ["n1", "n2"]);
+			ciso.addComponent("R2", "Resistor", 1000, ["n1", "n2"]);
+			ciso.addComponent("R3", "Resistor", 1000, ["n2", "n3"]);
+			ciso.addVoltageSource("DCV1",12,"n1","n3");
+
+			v1 = ciso.getVoltageAt("n1");
+			expect(v1).toBe(12);
+			var v2 = ciso.getVoltageAt("n2");
+			expect(v2).toBe(8);
+			i = ciso.getCurrent();
+			expect(i).toBeAbout(-0.008);
+
+			ciso = new CiSo();
+			ciso.addComponent("R1", "Resistor", 1000, ["n1", "n2"]);
+			ciso.addComponent("R2", "Resistor", 1000, ["n2", "n3"]);
+			ciso.addComponent("R3", "Resistor", 1000, ["n1", "n3"]);
+			ciso.addVoltageSource("DCV1",12,"n1","n3");
+
+			v1 = ciso.getVoltageAt("n1");
+			expect(v1).toBe(12);
+			var v2 = ciso.getVoltageAt("n2");
+			expect(v2).toBe(6);
+			i = ciso.getCurrent();
+			expect(i).toBeAbout(-0.018);
+		});
+
+		/**
+			V1 ---R1------R2-------R3----------R6--- Gnd
+								|					|---R4---|	|
+								|											|
+			      		|---------R5----------|
+		**/
+		/**
+
+					1000    1000    500  1000
+					           1000
+
+					           600
+		**/
+		it("We can solve a complex 6-resistor series-parallel circuit", function() {
+			var ciso = new CiSo();
+			ciso.addComponent("R1", "Resistor", 1000, ["n1", "n2"]);
+			ciso.addComponent("R2", "Resistor", 1000, ["n2", "n3"]);
+			ciso.addComponent("R3", "Resistor", 1000, ["n3", "n4"]);
+			ciso.addComponent("R4", "Resistor", 1000, ["n3", "n4"]);
+			ciso.addComponent("R5", "Resistor", 1000, ["n2", "n4"]);
+			ciso.addComponent("R6", "Resistor", 1000, ["n4", "n5"]);
+			ciso.addVoltageSource("DCV1",12,"n1","n5");
+
+			expect( ciso.getVoltageAt("n1") ).toBe(12);
+
+			expect( ciso.getCurrent() ).toBeAbout(-0.004615);
+		//	expect( ciso.getVoltageAt("n2") ).toBe(7.385);
+		});
 	});
 
 	describe("Calculating matrices for AC circuits", function() {
