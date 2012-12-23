@@ -238,5 +238,23 @@
 		return res;
 	};
 
+	CiSo.prototype.getVoltageAt = function(node) {
+		if (node === this.referenceNode) {
+			return 0;
+		}
+		var res = this.solve();
+		console.log(res)
+		return res.elements[0][this.getNodeIndex(node)];
+	};
+
+	CiSo.prototype.getVoltageBetween = function(node1, node2) {
+		return this.getVoltageAt(node1) - this.getVoltageAt(node2);
+	};
+
+	CiSo.prototype.getCurrent = function() {
+		var res = this.solve();
+		return res.elements[0][this.nodes.length - 1];
+	}
+
 	window.CiSo = CiSo;
 })();

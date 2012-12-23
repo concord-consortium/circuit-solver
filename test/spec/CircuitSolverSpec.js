@@ -209,6 +209,101 @@ describe("CircuitSolver", function() {
 		});
 	});
 
+	describe("Solving basic DC circuits", function() {
+		it("We can solve a 2-resistor series circuit", function() {
+			var ciso = new CiSo();
+			ciso.addComponent("R1", "Resistor", 5000, ["n1", "n2"]);
+			ciso.addComponent("R2", "Resistor", 5000, ["n2", "n3"]);
+			ciso.addVoltageSource("DCV1",12,"n1","n3");
+
+			var v1 = ciso.getVoltageAt("n1");
+			expect(v1).toBe(12);
+			var v2 = ciso.getVoltageAt("n2");
+			expect(v2).toBe(6);
+			var v3 = ciso.getVoltageAt("n3");
+			expect(v3).toBe(0);
+
+			var v12 = ciso.getVoltageBetween("n1", "n2");
+			expect(v12).toBe(6);
+			var v13 = ciso.getVoltageBetween("n1", "n3");
+			expect(v13).toBe(12);
+
+			var i = ciso.getCurrent();
+			expect(i).toBeAbout(-0.0012);
+
+			ciso = new CiSo();
+			ciso.addComponent("R1", "Resistor", 2000, ["n1", "n2"]);
+			ciso.addComponent("R2", "Resistor", 1000, ["n2", "n3"]);
+			ciso.addVoltageSource("DCV1",12,"n1","n3");
+
+			v1 = ciso.getVoltageAt("n1");
+			expect(v1).toBe(12);
+			v2 = ciso.getVoltageAt("n2");
+			expect(v2).toBe(4);
+			v3 = ciso.getVoltageAt("n3");
+			expect(v3).toBe(0);
+			v12 = ciso.getVoltageBetween("n1", "n2");
+			expect(v12).toBe(8);
+			v13 = ciso.getVoltageBetween("n1", "n3");
+			expect(v13).toBe(12);
+			i = ciso.getCurrent();
+			expect(i).toBeAbout(-0.004);
+		});
+
+		it("We can solve a 3-resistor series circuit", function() {
+			var ciso = new CiSo();
+			ciso.addComponent("R1", "Resistor", 1000, ["n1", "n2"]);
+			ciso.addComponent("R2", "Resistor", 2000, ["n2", "n3"]);
+			ciso.addComponent("R2", "Resistor", 3000, ["n3", "n4"]);
+			ciso.addVoltageSource("DCV1",12,"n1","n4");
+
+			var v1 = ciso.getVoltageAt("n1");
+			expect(v1).toBe(12);
+			var v2 = ciso.getVoltageAt("n2");
+			expect(v2).toBe(10);
+			var v3 = ciso.getVoltageAt("n3");
+			expect(v3).toBeAbout(6);
+			var v3 = ciso.getVoltageAt("n4");
+			expect(v3).toBe(0);
+
+			var i = ciso.getCurrent();
+			expect(i).toBeAbout(-0.002);
+		});
+
+		it("We can solve a 2-resistor parallel circuit", function() {
+			var ciso = new CiSo();
+			ciso.addComponent("R1", "Resistor", 1000, ["n1", "n2"]);
+			ciso.addComponent("R2", "Resistor", 1000, ["n1", "n2"]);
+			ciso.addVoltageSource("DCV1",12,"n1","n2");
+
+			var v1 = ciso.getVoltageAt("n1");
+			expect(v1).toBe(12);
+			var v2 = ciso.getVoltageAt("n2");
+			expect(v2).toBe(0);
+			var i = ciso.getCurrent();
+			expect(i).toBeAbout(-0.024);
+
+			ciso = new CiSo();
+			ciso.addComponent("R1", "Resistor", 1000, ["n1", "n2"]);
+			ciso.addComponent("R2", "Resistor", 3000, ["n1", "n2"]);
+			ciso.addVoltageSource("DCV1",12,"n1","n2");
+
+			i = ciso.getCurrent();
+			expect(i).toBeAbout(-0.016);
+		});
+
+		it("We can solve a 3-resistor parallel circuit", function() {
+			var ciso = new CiSo();
+			ciso.addComponent("R1", "Resistor", 1000, ["n1", "n2"]);
+			ciso.addComponent("R2", "Resistor", 1000, ["n1", "n2"]);
+			ciso.addComponent("R3", "Resistor", 500, ["n1", "n2"]);
+			ciso.addVoltageSource("DCV1",12,"n1","n2");
+
+			var i = ciso.getCurrent();
+			expect(i).toBeAbout(-0.048);
+		});
+	});
+
 	describe("Calculating matrices for AC circuits", function() {
 
 		var ciso = new CiSo();
