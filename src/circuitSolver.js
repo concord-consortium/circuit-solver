@@ -209,7 +209,34 @@
 		for (i = 0; i < sources.length; i++) {
 			this.ZMatrix[0][numNodes - 1 + i].real = sources[i].voltage;
 		}
-	}
+	};
+
+	CiSo.prototype.solve = function () {
+		this.createAMatrix();
+		this.createZMatrix();
+
+		// *** convert to only real numbers for now ***
+		for (i = 0; i<this.AMatrix.length; i++) {
+			vector = this.AMatrix[i];
+			for (j = 0; j<vector.length; j++) {
+				vector[j] = vector[j].real;
+			}
+		}
+
+		for (i = 0; i<this.ZMatrix.length; i++) {
+			vector = this.ZMatrix[i];
+			for (j = 0; j<vector.length; j++) {
+				vector[j] = vector[j].real;
+			}
+		}
+		// ****
+
+		aM = $M(this.AMatrix);
+		zM = $M(this.ZMatrix);
+		invAM = aM.inv();
+		res = zM.x(invAM);
+		return res;
+	};
 
 	window.CiSo = CiSo;
 })();

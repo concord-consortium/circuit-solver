@@ -25,6 +25,13 @@ beforeEach(function() {
       }
       return contains;
     },
+    toBeAbout: function(val) {
+      function toSigFigs (num, sigFigs) {
+        num = num.toPrecision(sigFigs);
+        return sigFigs > Math.log(num) * Math.LOG10E ? num : ""+parseFloat(num);
+      }
+      return toSigFigs(this.actual, 3) === toSigFigs(val, 3)
+    },
     toBeComplex: function(real, imag) {
       var act = this.actual;
 

@@ -195,6 +195,18 @@ describe("CircuitSolver", function() {
 
 			expect (ciso.ZMatrix[0]).toBeComplexArray([[0, 0], [0, 0], [0, 0], [15, 0]]);
 		});
+
+		it("We can solve the matrixes", function() {
+			var result = ciso.solve();
+
+			expect(result.elements.length).toBe(1);
+			expect(result.elements[0].length).toBe(4);
+
+			expect(result.elements[0][0]).toBe(15);
+			expect(result.elements[0][1]).toBeAbout(4.287);
+			expect(result.elements[0][2]).toBeAbout(2.142e-3);
+			expect(result.elements[0][3]).toBeAbout(-2.142e-3);
+		});
 	});
 
 	describe("Calculating matrices for AC circuits", function() {
