@@ -345,17 +345,10 @@ describe("CircuitSolver", function() {
 		});
 
 		/**
-			V1 ---R1------R2-------R3----------R6--- Gnd
-								|					|---R4---|	|
-								|											|
-			      		|---------R5----------|
-		**/
-		/**
-
-					1000    1000    500  1000
-					           1000
-
-					           600
+			V1 ───R1──┬───R2────┬──R3────┬──┬──R6─── Gnd
+								│					└───R4───┘	│
+								│											│
+								└────────R5───────────┘
 		**/
 		it("We can solve a complex 6-resistor series-parallel circuit", function() {
 			var ciso = new CiSo();
@@ -374,6 +367,49 @@ describe("CircuitSolver", function() {
 			expect( ciso.getVoltageAt("n2") ).toBeAbout(7.385);
 			expect( ciso.getVoltageAt("n3") ).toBeAbout(5.538);
 			expect( ciso.getVoltageAt("n4") ).toBeAbout(4.615);
+		});
+
+		/**
+				┌──────R4──────┐
+				│              │
+				├──R1──┬──R3───┤
+				│      │       │
+				V1     R2      V2
+				└──────┴───────┘
+		**/
+		it("We can solve a 2-voltage circuit", function() {
+			var ciso = new CiSo();
+			ciso.addVoltageSource("DCV1",12,"n2","n1");
+			ciso.addComponent("R1", "Resistor", 3, ["n2", "n3"]);
+			ciso.addComponent("R2", "Resistor", 8, ["n3", "n1"]);
+			ciso.addComponent("R3", "Resistor", 6, ["n3", "n4"]);
+			ciso.addComponent("R4", "Resistor", 4, ["n2", "n4"]);
+			ciso.addVoltageSource("DCV2",6,"n1","n4");
+
+			expect( ciso.getVoltageAt("n1") ).toBe(0);
+			expect( ciso.getVoltageAt("n2") ).toBe(12);
+			expect( ciso.getVoltageAt("n3") ).toBeAbout(4.8);
+			expect( ciso.getVoltageAt("n4") ).toBe(-6);
+		});
+
+		/**
+				As above
+		**/
+		it("We can solve a 2-voltage circuit and change the reference node", function() {
+			var ciso = new CiSo();
+			ciso.addVoltageSource("DCV1",12,"n2","n1");
+			ciso.addComponent("R1", "Resistor", 3, ["n2", "n3"]);
+			ciso.addComponent("R2", "Resistor", 8, ["n3", "n1"]);
+			ciso.addComponent("R3", "Resistor", 6, ["n3", "n4"]);
+			ciso.addComponent("R4", "Resistor", 4, ["n2", "n4"]);
+			ciso.addVoltageSource("DCV2",6,"n1","n4");
+
+			ciso.setReferenceNode("n2");
+
+			expect( ciso.getVoltageAt("n1") ).toBe(-12);
+			expect( ciso.getVoltageAt("n2") ).toBe(0);
+			expect( ciso.getVoltageAt("n3") ).toBeAbout(-7.2);
+			expect( ciso.getVoltageAt("n4") ).toBeAbout(-18);
 		});
 	});
 
