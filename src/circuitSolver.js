@@ -20,7 +20,7 @@
 
 	CiSo.prototype.getDiagonalMatrixElement = function(node, freq) {
 		var neighborComponents = this.nodeMap[node],
-				matrixElement = new Complex(0,0),
+				matrixElement = $Comp(0,0),
 				imp, i;
 		for (i = neighborComponents.length - 1; i >= 0; i--) {
 			imp = neighborComponents[i].getImpedance(freq);
@@ -55,7 +55,7 @@
 	var twoPi = 2*Math.PI;
 
 	Component.prototype.getImpedance = function(frequency) {
-		var impedance = new Complex(0,0);
+		var impedance = $Comp(0,0);
 		if (this.type === "Resistor") {
 			impedance.real = this.value;
 			impedance.imag = 0;
@@ -132,7 +132,7 @@
 	};
 
 	CiSo.prototype.createEmptyAMatrix = function () {
-		var cZero = new Complex(0,0),
+		var cZero = $Comp(0,0),
 				numNodes = this.nodes.length,
 				numSources = this.voltageSources.length,
 				arraySize = numNodes - 1 + numSources,
@@ -172,7 +172,7 @@
 	CiSo.prototype.addBCMatrix = function (){
 		if (this.voltageSources.length === 0) return;
 
-		var one = new Complex(1,0),
+		var one = $Comp(1,0),
 				neg = one.negative(),
 				sources = this.voltageSources,
 				source, posNode, negNode, nodeIndex, i;
@@ -195,7 +195,7 @@
 	};
 
 	CiSo.prototype.createZMatrix = function () {
-		var cZero = new Complex(0,0),
+		var cZero = $Comp(0,0),
 				numNodes = this.nodes.length,
 				numSources = this.voltageSources.length,
 				arraySize = numNodes - 1 + numSources,
