@@ -38,6 +38,8 @@
 
 	CiSo.prototype.getNodeIndex = function(node) {
 		var index = this.nodes.indexOf(node);
+		if (index === this.referenceNodeIndex)
+			return -1;
 		if (index > this.referenceNodeIndex)
 			return index - 1;
 		return index;
@@ -162,7 +164,7 @@
 		for (i = 0; i < this.components.length; i++) {
 			rowIndex = this.getNodeIndexes(this.components[i])[0];
 			colIndex = this.getNodeIndexes(this.components[i])[1];
-			if (rowIndex === this.referenceNodeIndex || colIndex === this.referenceNodeIndex) continue;
+			if (rowIndex === -1 || colIndex === -1) continue;
 			this.AMatrix[rowIndex][colIndex] = this.AMatrix[colIndex][rowIndex] = this.AMatrix[rowIndex][colIndex].add(this.components[i].getOffDiagonalMatrixElement(frequency));
 		}
 	};

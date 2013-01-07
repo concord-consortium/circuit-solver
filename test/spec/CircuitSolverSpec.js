@@ -359,18 +359,21 @@ describe("CircuitSolver", function() {
 		**/
 		it("We can solve a complex 6-resistor series-parallel circuit", function() {
 			var ciso = new CiSo();
+			// add nodes in arbitrary order
+			ciso.addComponent("R4", "Resistor", 1000, ["n3", "n4"]);
 			ciso.addComponent("R1", "Resistor", 1000, ["n1", "n2"]);
+			ciso.addComponent("R6", "Resistor", 1000, ["n4", "n5"]);
+			ciso.addComponent("R5", "Resistor", 1000, ["n2", "n4"]);
 			ciso.addComponent("R2", "Resistor", 1000, ["n2", "n3"]);
 			ciso.addComponent("R3", "Resistor", 1000, ["n3", "n4"]);
-			ciso.addComponent("R4", "Resistor", 1000, ["n3", "n4"]);
-			ciso.addComponent("R5", "Resistor", 1000, ["n2", "n4"]);
-			ciso.addComponent("R6", "Resistor", 1000, ["n4", "n5"]);
 			ciso.addVoltageSource("DCV1",12,"n1","n5");
 
 			expect( ciso.getVoltageAt("n1") ).toBe(12);
 
 			expect( ciso.getCurrent() ).toBeAbout(-0.004615);
-		//	expect( ciso.getVoltageAt("n2") ).toBe(7.385);
+			expect( ciso.getVoltageAt("n2") ).toBeAbout(7.385);
+			expect( ciso.getVoltageAt("n3") ).toBeAbout(5.538);
+			expect( ciso.getVoltageAt("n4") ).toBeAbout(4.615);
 		});
 	});
 
