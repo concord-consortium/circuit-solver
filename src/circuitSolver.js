@@ -245,7 +245,6 @@
 			return 0;
 		}
 		var res = this.solve();
-		console.log(res)
 		return res.elements[0][this.getNodeIndex(node)];
 	};
 

@@ -32,6 +32,15 @@ beforeEach(function() {
       }
       return toSigFigs(this.actual, 3) === toSigFigs(val, 3)
     },
+    toBeArray: function(arr) {
+      var act = this.actual;
+      for (var i=0; i<arr.length; i++) {
+        if (arr[i] !== act[i]) {
+          return false;
+        }
+      }
+      return true;
+    },
     toBeComplex: function(real, imag) {
       var act = this.actual;
 
