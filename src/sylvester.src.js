@@ -20,8 +20,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Library reduced to include only functions needed by The Concord Consortium's
-// Circuit Solver (CiSo) software by Sam Fentress, The Concord Consortium.
+// === Updated library ===
+//
+// Library modified to use Complex Numbers and reduced to include only functions needed
+// by The Concord Consortium's Circuit Solver (CiSo) software by Sam Fentress,
+// The Concord Consortium, Jan 7th 2013
+//
 // Version bumped from 0.1.3 to 0.1.3-cc
 
 var Sylvester = {
@@ -51,7 +55,7 @@ Matrix.prototype = {
   // col(1) on the result.
   multiply: function(matrix) {
     if (!matrix.elements) {
-      return this.map(function(x) { return x * matrix; });
+      return this.map(function(x) { return x.multiply(matrix); });
     }
     var returnVector = matrix.modulus ? true : false;
     var M = matrix.elements || matrix;
@@ -63,10 +67,10 @@ Matrix.prototype = {
       elements[i] = [];
       nj = kj;
       do { j = kj - nj;
-        sum = 0;
+        sum = $Comp(0,0);
         nc = cols;
         do { c = cols - nc;
-          sum += this.elements[i][c] * M[c][j];
+          sum = sum.add(this.elements[i][c].multiply(M[c][j]));
         } while (--nc);
         elements[i][j] = sum;
       } while (--nj);
@@ -89,28 +93,28 @@ Matrix.prototype = {
     var M = this.dup(), els;
     var n = this.elements.length, k = n, i, np, kp = this.elements[0].length, p;
     do { i = k - n;
-      if (M.elements[i][i] == 0) {
+      if (M.elements[i][i].equals(0)) {
         for (j = i + 1; j < k; j++) {
-          if (M.elements[j][i] != 0) {
+          if (!M.elements[j][i].equals(0)) {
             els = []; np = kp;
             do { p = kp - np;
-              els.push(M.elements[i][p] + M.elements[j][p]);
+              els.push(M.elements[i][p].add(M.elements[j][p]));
             } while (--np);
             M.elements[i] = els;
             break;
           }
         }
       }
-      if (M.elements[i][i] != 0) {
+      if (!M.elements[i][i].equals(0)) {
         for (j = i + 1; j < k; j++) {
-          var multiplier = M.elements[j][i] / M.elements[i][i];
+          var multiplier = M.elements[j][i].divide(M.elements[i][i]);
           els = []; np = kp;
           do { p = kp - np;
             // Elements with column numbers up to an including the number
             // of the row that we're subtracting can safely be set straight to
             // zero, since that's the point of this routine and it avoids having
             // to loop over and correct rounding errors later
-            els.push(p <= i ? 0 : M.elements[j][p] - M.elements[i][p] * multiplier);
+            els.push(p <= i ? $Comp(0) : M.elements[j][p].subtract(M.elements[i][p].multiply(multiplier)));
           } while (--np);
           M.elements[j] = els;
         }
@@ -127,7 +131,7 @@ Matrix.prototype = {
     var M = this.toRightTriangular();
     var det = M.elements[0][0], n = M.elements.length - 1, k = n, i;
     do { i = k - n + 1;
-      det = det * M.elements[i][i];
+      det = det.multiply(M.elements[i][i]);
     } while (--n);
     return det;
   },
@@ -136,7 +140,7 @@ Matrix.prototype = {
 
   // Returns true iff the matrix is singular
   isSingular: function() {
-    return (this.isSquare() && this.determinant() === 0);
+    return (this.isSquare() && this.determinant().equals(0));
   },
 
   // Returns the result of attaching the given argument to the right-hand side of the matrix
@@ -170,7 +174,7 @@ Matrix.prototype = {
       inverse_elements[i] = [];
       divisor = M.elements[i][i];
       do { p = kp - np;
-        new_element = M.elements[i][p] / divisor;
+        new_element = M.elements[i][p].divide(divisor);
         els.push(new_element);
         // Shuffle of the current row of the right hand side into the results
         // array as it will not be modified by later runs through this loop
@@ -182,7 +186,7 @@ Matrix.prototype = {
       for (j = 0; j < i; j++) {
         els = []; np = kp;
         do { p = kp - np;
-          els.push(M.elements[j][p] - M.elements[i][p] * M.elements[j][i]);
+          els.push(M.elements[j][p].subtract(M.elements[i][p].multiply(M.elements[j][i])));
         } while (--np);
         M.elements[j] = els;
       }
@@ -229,7 +233,7 @@ Matrix.I = function(n) {
   do { i = k - n;
     els[i] = []; nj = k;
     do { j = k - nj;
-      els[i][j] = (i == j) ? 1 : 0;
+      els[i][j] = (i == j) ? $Comp(1,0) : $Comp(0);
     } while (--nj);
   } while (--n);
   return Matrix.create(els);

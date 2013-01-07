@@ -58,9 +58,8 @@ beforeEach(function() {
     // checks an array of complexes against an equivalent array specified as [[r1,i1],[r2,i2],...]
     toBeComplexArray: function (arr) {
       var act = this.actual;
-      function toSig (num, sigFigs) {
-        num = num.toPrecision(sigFigs);
-        return sigFigs > Math.log(num) * Math.LOG10E ? num : ""+parseFloat(num);
+      function nearlyEqual (num1, num2) {
+        return Math.abs(num1-num2) < 1e-3;
       }
 
       this.message = function() {
@@ -77,7 +76,7 @@ beforeEach(function() {
         if (!actual) {
           return false;
         }
-        if (toSig(actual.real, 3) !== toSig(compare[0], 3) || toSig(actual.imag, 3) !== toSig(compare[1], 3)) {
+        if (!nearlyEqual(actual.real, compare[0]) || !nearlyEqual(actual.imag, compare[1])) {
           return false;
         }
       }
