@@ -217,22 +217,6 @@
 		this.createAMatrix();
 		this.createZMatrix();
 
-		// *** convert to only real numbers for now ***
-		for (i = 0; i<this.AMatrix.length; i++) {
-			vector = this.AMatrix[i];
-			for (j = 0; j<vector.length; j++) {
-				vector[j] = vector[j].real;
-			}
-		}
-
-		for (i = 0; i<this.ZMatrix.length; i++) {
-			vector = this.ZMatrix[i];
-			for (j = 0; j<vector.length; j++) {
-				vector[j] = vector[j].real;
-			}
-		}
-		// ****
-
 		aM = $M(this.AMatrix);
 		zM = $M(this.ZMatrix);
 		invAM = aM.inv();
@@ -242,14 +226,14 @@
 
 	CiSo.prototype.getVoltageAt = function(node) {
 		if (node === this.referenceNode) {
-			return 0;
+			return $Comp(0);
 		}
 		var res = this.solve();
 		return res.elements[0][this.getNodeIndex(node)];
 	};
 
 	CiSo.prototype.getVoltageBetween = function(node1, node2) {
-		return this.getVoltageAt(node1) - this.getVoltageAt(node2);
+		return this.getVoltageAt(node1).subtract(this.getVoltageAt(node2));
 	};
 
 	CiSo.prototype.getCurrent = function() {

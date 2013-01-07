@@ -202,10 +202,10 @@ describe("CircuitSolver", function() {
 			expect(result.elements.length).toBe(1);
 			expect(result.elements[0].length).toBe(4);
 
-			expect(result.elements[0][0]).toBe(15);
-			expect(result.elements[0][1]).toBeAbout(4.287);
-			expect(result.elements[0][2]).toBeAbout(2.142e-3);
-			expect(result.elements[0][3]).toBeAbout(-2.142e-3);
+			expect(result.elements[0][0]).toBeComplex(15,0);
+			expect(result.elements[0][1]).toBeComplex(4.287,0);
+			expect(result.elements[0][2]).toBeComplex(2.142e-3,0);
+			expect(result.elements[0][3]).toBeComplex(-2.142e-3,0);
 		});
 	});
 
@@ -217,19 +217,19 @@ describe("CircuitSolver", function() {
 			ciso.addVoltageSource("DCV1",12,"n1","n3");
 
 			var v1 = ciso.getVoltageAt("n1");
-			expect(v1).toBe(12);
+			expect(v1.real).toBe(12);
 			var v2 = ciso.getVoltageAt("n2");
-			expect(v2).toBe(6);
+			expect(v2.real).toBe(6);
 			var v3 = ciso.getVoltageAt("n3");
-			expect(v3).toBe(0);
+			expect(v3.real).toBe(0);
 
 			var v12 = ciso.getVoltageBetween("n1", "n2");
-			expect(v12).toBe(6);
+			expect(v12.real).toBe(6);
 			var v13 = ciso.getVoltageBetween("n1", "n3");
-			expect(v13).toBe(12);
+			expect(v13.real).toBe(12);
 
 			var i = ciso.getCurrent();
-			expect(i).toBeAbout(-0.0012);
+			expect(i.real).toBeAbout(-0.0012);
 
 			ciso = new CiSo();
 			ciso.addComponent("R1", "Resistor", 2000, ["n1", "n2"]);
@@ -237,17 +237,17 @@ describe("CircuitSolver", function() {
 			ciso.addVoltageSource("DCV1",12,"n1","n3");
 
 			v1 = ciso.getVoltageAt("n1");
-			expect(v1).toBe(12);
+			expect(v1.real).toBe(12);
 			v2 = ciso.getVoltageAt("n2");
-			expect(v2).toBe(4);
+			expect(v2.real).toBe(4);
 			v3 = ciso.getVoltageAt("n3");
-			expect(v3).toBe(0);
+			expect(v3.real).toBe(0);
 			v12 = ciso.getVoltageBetween("n1", "n2");
-			expect(v12).toBe(8);
+			expect(v12.real).toBe(8);
 			v13 = ciso.getVoltageBetween("n1", "n3");
-			expect(v13).toBe(12);
+			expect(v13.real).toBe(12);
 			i = ciso.getCurrent();
-			expect(i).toBeAbout(-0.004);
+			expect(i.real).toBeAbout(-0.004);
 		});
 
 		it("We can solve a 3-resistor series circuit", function() {
@@ -258,16 +258,16 @@ describe("CircuitSolver", function() {
 			ciso.addVoltageSource("DCV1",12,"n1","n4");
 
 			var v1 = ciso.getVoltageAt("n1");
-			expect(v1).toBe(12);
+			expect(v1.real).toBe(12);
 			var v2 = ciso.getVoltageAt("n2");
-			expect(v2).toBe(10);
+			expect(v2.real).toBe(10);
 			var v3 = ciso.getVoltageAt("n3");
-			expect(v3).toBeAbout(6);
+			expect(v3.real).toBeAbout(6);
 			var v3 = ciso.getVoltageAt("n4");
-			expect(v3).toBe(0);
+			expect(v3.real).toBe(0);
 
 			var i = ciso.getCurrent();
-			expect(i).toBeAbout(-0.002);
+			expect(i.real).toBeAbout(-0.002);
 		});
 
 		it("We can solve a 2-resistor parallel circuit", function() {
@@ -277,11 +277,11 @@ describe("CircuitSolver", function() {
 			ciso.addVoltageSource("DCV1",12,"n1","n2");
 
 			var v1 = ciso.getVoltageAt("n1");
-			expect(v1).toBe(12);
+			expect(v1.real).toBe(12);
 			var v2 = ciso.getVoltageAt("n2");
-			expect(v2).toBe(0);
+			expect(v2.real).toBe(0);
 			var i = ciso.getCurrent();
-			expect(i).toBeAbout(-0.024);
+			expect(i.real).toBeAbout(-0.024);
 
 			ciso = new CiSo();
 			ciso.addComponent("R1", "Resistor", 1000, ["n1", "n2"]);
@@ -289,7 +289,7 @@ describe("CircuitSolver", function() {
 			ciso.addVoltageSource("DCV1",12,"n1","n2");
 
 			i = ciso.getCurrent();
-			expect(i).toBeAbout(-0.016);
+			expect(i.real).toBeAbout(-0.016);
 		});
 
 		it("We can solve a 3-resistor parallel circuit", function() {
@@ -300,7 +300,7 @@ describe("CircuitSolver", function() {
 			ciso.addVoltageSource("DCV1",12,"n1","n2");
 
 			var i = ciso.getCurrent();
-			expect(i).toBeAbout(-0.048);
+			expect(i.real).toBeAbout(-0.048);
 		});
 
 		it("We can solve a 3-resistor series-parallel circuit", function() {
@@ -311,11 +311,11 @@ describe("CircuitSolver", function() {
 			ciso.addVoltageSource("DCV1",12,"n1","n3");
 
 			var v1 = ciso.getVoltageAt("n1");
-			expect(v1).toBe(12);
+			expect(v1.real).toBe(12);
 			var v2 = ciso.getVoltageAt("n2");
-			expect(v2).toBe(4);
+			expect(v2.real).toBe(4);
 			var i = ciso.getCurrent();
-			expect(i).toBeAbout(-0.008);
+			expect(i.real).toBeAbout(-0.008);
 
 			ciso = new CiSo();
 			ciso.addComponent("R1", "Resistor", 1000, ["n1", "n2"]);
@@ -324,11 +324,11 @@ describe("CircuitSolver", function() {
 			ciso.addVoltageSource("DCV1",12,"n1","n3");
 
 			v1 = ciso.getVoltageAt("n1");
-			expect(v1).toBe(12);
+			expect(v1.real).toBe(12);
 			var v2 = ciso.getVoltageAt("n2");
-			expect(v2).toBe(8);
+			expect(v2.real).toBe(8);
 			i = ciso.getCurrent();
-			expect(i).toBeAbout(-0.008);
+			expect(i.real).toBeAbout(-0.008);
 
 			ciso = new CiSo();
 			ciso.addComponent("R1", "Resistor", 1000, ["n1", "n2"]);
@@ -337,11 +337,11 @@ describe("CircuitSolver", function() {
 			ciso.addVoltageSource("DCV1",12,"n1","n3");
 
 			v1 = ciso.getVoltageAt("n1");
-			expect(v1).toBe(12);
+			expect(v1.real).toBe(12);
 			var v2 = ciso.getVoltageAt("n2");
-			expect(v2).toBe(6);
+			expect(v2.real).toBeAbout(6);
 			i = ciso.getCurrent();
-			expect(i).toBeAbout(-0.018);
+			expect(i.real).toBeAbout(-0.018);
 		});
 
 		/**
@@ -361,12 +361,12 @@ describe("CircuitSolver", function() {
 			ciso.addComponent("R3", "Resistor", 1000, ["n3", "n4"]);
 			ciso.addVoltageSource("DCV1",12,"n1","n5");
 
-			expect( ciso.getVoltageAt("n1") ).toBe(12);
+			expect( ciso.getVoltageAt("n1").real ).toBe(12);
 
-			expect( ciso.getCurrent() ).toBeAbout(-0.004615);
-			expect( ciso.getVoltageAt("n2") ).toBeAbout(7.385);
-			expect( ciso.getVoltageAt("n3") ).toBeAbout(5.538);
-			expect( ciso.getVoltageAt("n4") ).toBeAbout(4.615);
+			expect( ciso.getCurrent().real ).toBeAbout(-0.004615);
+			expect( ciso.getVoltageAt("n2").real ).toBeAbout(7.385);
+			expect( ciso.getVoltageAt("n3").real ).toBeAbout(5.538);
+			expect( ciso.getVoltageAt("n4").real ).toBeAbout(4.615);
 		});
 
 		/**
@@ -386,10 +386,10 @@ describe("CircuitSolver", function() {
 			ciso.addComponent("R4", "Resistor", 4, ["n2", "n4"]);
 			ciso.addVoltageSource("DCV2",6,"n1","n4");
 
-			expect( ciso.getVoltageAt("n1") ).toBe(0);
-			expect( ciso.getVoltageAt("n2") ).toBe(12);
-			expect( ciso.getVoltageAt("n3") ).toBeAbout(4.8);
-			expect( ciso.getVoltageAt("n4") ).toBe(-6);
+			expect( ciso.getVoltageAt("n1").real ).toBe(0);
+			expect( ciso.getVoltageAt("n2").real ).toBe(12);
+			expect( ciso.getVoltageAt("n3").real ).toBeAbout(4.8);
+			expect( ciso.getVoltageAt("n4").real ).toBe(-6);
 		});
 
 		/**
@@ -406,10 +406,10 @@ describe("CircuitSolver", function() {
 
 			ciso.setReferenceNode("n2");
 
-			expect( ciso.getVoltageAt("n1") ).toBe(-12);
-			expect( ciso.getVoltageAt("n2") ).toBe(0);
-			expect( ciso.getVoltageAt("n3") ).toBeAbout(-7.2);
-			expect( ciso.getVoltageAt("n4") ).toBeAbout(-18);
+			expect( ciso.getVoltageAt("n1").real ).toBeAbout(-12);
+			expect( ciso.getVoltageAt("n2").real ).toBe(0);
+			expect( ciso.getVoltageAt("n3").real ).toBeAbout(-7.2);
+			expect( ciso.getVoltageAt("n4").real ).toBeAbout(-18);
 		});
 	});
 
