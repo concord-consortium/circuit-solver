@@ -448,5 +448,82 @@ describe("CircuitSolver", function() {
 		});
 	});
 
+  describe("Solving basic AC circuits", function() {
+    it("We can solve a 2-cap series circuit", function() {
+      var ciso = new CiSo();
+      ciso.addComponent("C1", "Capacitor", 0.000001, ["n1", "n2"]);
+      ciso.addComponent("C2", "Capacitor", 0.000001, ["n2", "n3"]);
+      ciso.addVoltageSource("ACV1",12,"n1","n3",1000);
+
+      expect( ciso.getVoltageAt("n1") ).toBeComplex(12,0);
+      expect( ciso.getVoltageAt("n2") ).toBeComplex(6,0);
+      expect( ciso.getVoltageAt("n3") ).toBeComplex(0,0);
+    });
+
+    it("We can solve a 2-ind series circuit", function() {
+      var ciso = new CiSo();
+      ciso.addComponent("L1", "Inductor", 0.000001, ["n1", "n2"]);
+      ciso.addComponent("L2", "Inductor", 0.000001, ["n2", "n3"]);
+      ciso.addVoltageSource("ACV1",12,"n1","n3",1000);
+
+      expect( ciso.getVoltageAt("n1") ).toBeComplex(12,0);
+      expect( ciso.getVoltageAt("n2") ).toBeComplex(6,0);
+      expect( ciso.getVoltageAt("n3") ).toBeComplex(0,0);
+    });
+
+    it("We can solve an rc series circuit", function() {
+      var ciso = new CiSo();
+      ciso.addComponent("R1", "Resistor", 100, ["n1", "n2"]);
+      ciso.addComponent("C1", "Capacitor", 1e-6, ["n2", "n3"]);
+      ciso.addVoltageSource("ACV1",10,"n1","n3",1000);
+
+      expect( ciso.getVoltageAt("n1") ).toBeComplex(10,0);
+      expect( ciso.getVoltageAt("n2") ).toBeComplex(7.170, 4.505);
+      expect( ciso.getVoltageAt("n3") ).toBeComplex(0,0);
+
+      ciso = new CiSo();
+      ciso.addComponent("R1", "Resistor", 100, ["n1", "n2"]);
+      ciso.addComponent("C1", "Capacitor", 1e-6, ["n2", "n3"]);
+      ciso.addVoltageSource("ACV1",10,"n1","n3",10000);
+
+      expect( ciso.getVoltageAt("n2") ).toBeComplex(0.247, 1.552);
+    });
+
+    it("We can solve an rl series circuit", function() {
+      var ciso = new CiSo();
+      ciso.addComponent("R1", "Resistor", 100, ["n1", "n2"]);
+      ciso.addComponent("L1", "Inductor", 0.001, ["n2", "n3"]);
+      ciso.addVoltageSource("ACV1",10,"n1","n3",1000);
+
+      expect( ciso.getVoltageAt("n1") ).toBeComplex(10,0);
+      expect( ciso.getVoltageAt("n2") ).toBeComplex(0.0393, 0.626);
+      expect( ciso.getVoltageAt("n3") ).toBeComplex(0,0);
+
+      ciso = new CiSo();
+      ciso.addComponent("R1", "Resistor", 100, ["n1", "n2"]);
+      ciso.addComponent("L1", "Inductor", 0.001, ["n2", "n3"]);
+      ciso.addVoltageSource("ACV1",10,"n1","n3",10000);
+
+      expect( ciso.getVoltageAt("n2") ).toBeComplex(2.83, 4.505);
+    });
+
+    it("We can solve a cl series circuit", function() {
+      var ciso = new CiSo();
+      ciso.addComponent("C1", "Capacitor", 1e-6, ["n1", "n2"]);
+      ciso.addComponent("L1", "Inductor", 0.001, ["n2", "n3"]);
+      ciso.addVoltageSource("ACV1",10,"n1","n3",1000);
+
+      expect( ciso.getVoltageAt("n1") ).toBeComplex(10,0);
+      expect( ciso.getVoltageAt("n2") ).toBeComplex(-0.411, 0);
+      expect( ciso.getVoltageAt("n3") ).toBeComplex(0,0);
+
+      ciso = new CiSo();
+      ciso.addComponent("C1", "Capacitor", 1e-6, ["n1", "n2"]);
+      ciso.addComponent("L1", "Inductor", 0.001, ["n2", "n3"]);
+      ciso.addVoltageSource("ACV1",10,"n1","n3",10000);
+
+      expect( ciso.getVoltageAt("n2") ).toBeComplex(13.392, 0);
+    });
+  });
 });
 
