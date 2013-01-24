@@ -62,7 +62,7 @@
 		}
 		else if (this.type == "Capacitor") {
 			impedance.real = 0;
-			impedance.imag = 1/(twoPi * frequency * this.value);
+			impedance.imag = -1/(twoPi * frequency * this.value);
 		}
 		else if (this.type == "Inductor") {
 			impedance.real = 0;

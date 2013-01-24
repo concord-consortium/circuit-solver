@@ -56,7 +56,7 @@ describe("CircuitSolver", function() {
 			var testComponent2 = ciso.components[2];
 			var frequency = 2000;
 			expect(testComponent0.getImpedance(frequency)).toBeComplex(5000, 0);
-			expect(testComponent1.getImpedance(frequency)).toBeComplex(0, 1/(2*Math.PI*frequency*testComponent1.value));
+			expect(testComponent1.getImpedance(frequency)).toBeComplex(0, -1/(2*Math.PI*frequency*testComponent1.value));
 			expect(testComponent2.getImpedance(frequency)).toBeComplex(0, 0.251);
 		});
 
@@ -426,9 +426,9 @@ describe("CircuitSolver", function() {
 			var frequency = ciso.voltageSources[0].frequency;
 			expect(ciso.getDiagonalMatrixElement(testNode, frequency)).toBeComplex(0.0002, 0);
 			testNode = ciso.nodes[1];
-			expect(ciso.getDiagonalMatrixElement(testNode, frequency)).toBeComplex(0.0002, -0.0125664);
+			expect(ciso.getDiagonalMatrixElement(testNode, frequency)).toBeComplex(0.0002, 0.0125664);
 			testNode = ciso.nodes[2];
-			expect(ciso.getDiagonalMatrixElement(testNode, frequency)).toBeComplex(0, -3.9914);
+			expect(ciso.getDiagonalMatrixElement(testNode, frequency)).toBeComplex(0, -3.9663);
 		});
 
 		it("We can compute the off-diagonal matrix element for a component", function() {
@@ -436,15 +436,15 @@ describe("CircuitSolver", function() {
 			var testComponent = ciso.components[0];
 			expect(testComponent.getOffDiagonalMatrixElement(frequency)).toBeComplex(-0.0002, 0);
 			testComponent = ciso.components[1]
-			expect(testComponent.getOffDiagonalMatrixElement(frequency)).toBeComplex(0, 0.012566);
+			expect(testComponent.getOffDiagonalMatrixElement(frequency)).toBeComplex(0, -0.012566);
 		});
 
 		it("We can add the G matrix", function() {
 			ciso.createEmptyAMatrix();
 			ciso.addGMatrix();
 			expect (ciso.AMatrix[0]).toBeComplexArray([[ 0.0002, 0], [-0.0002, 0       ], [0, 0       ]]);
-			expect (ciso.AMatrix[1]).toBeComplexArray([[-0.0002, 0], [ 0.0002, -0.01257], [0, 0.012566]]);
-			expect (ciso.AMatrix[2]).toBeComplexArray([[ 0, 0     ], [ 0, 0.012566     ], [0, -3.99143]]);
+			expect (ciso.AMatrix[1]).toBeComplexArray([[-0.0002, 0], [ 0.0002, 0.01257], [0, -0.012566]]);
+			expect (ciso.AMatrix[2]).toBeComplexArray([[ 0, 0     ], [ 0, -0.012566     ], [0, -3.9663]]);
 		});
 	});
 
@@ -478,7 +478,7 @@ describe("CircuitSolver", function() {
       ciso.addVoltageSource("ACV1",10,"n1","n3",1000);
 
       expect( ciso.getVoltageAt("n1") ).toBeComplex(10,0);
-      expect( ciso.getVoltageAt("n2") ).toBeComplex(7.170, 4.505);
+      expect( ciso.getVoltageAt("n2") ).toBeComplex(7.170, -4.505);
       expect( ciso.getVoltageAt("n3") ).toBeComplex(0,0);
 
       ciso = new CiSo();
@@ -486,7 +486,7 @@ describe("CircuitSolver", function() {
       ciso.addComponent("C1", "Capacitor", 1e-6, ["n2", "n3"]);
       ciso.addVoltageSource("ACV1",10,"n1","n3",10000);
 
-      expect( ciso.getVoltageAt("n2") ).toBeComplex(0.247, 1.552);
+      expect( ciso.getVoltageAt("n2") ).toBeComplex(0.247, -1.552);
     });
 
     it("We can solve an rl series circuit", function() {
@@ -523,6 +523,18 @@ describe("CircuitSolver", function() {
       ciso.addVoltageSource("ACV1",10,"n1","n3",10000);
 
       expect( ciso.getVoltageAt("n2") ).toBeComplex(13.392, 0);
+    });
+
+    it("We can solve an rcl series circuit", function() {
+      var ciso = new CiSo();
+      ciso.addComponent("R1", "Resistor", 100, ["n1", "n2"]);
+      ciso.addComponent("C1", "Capacitor", 1e-6, ["n2", "n3"]);
+      ciso.addComponent("L1", "Inductor", 0.001, ["n3", "n4"]);
+      ciso.addVoltageSource("ACV1",10,"n1","n4",1000);
+
+      expect( ciso.getVoltageAt("n1") ).toBeComplex(10,0);
+      expect( ciso.getVoltageAt("n2") ).toBeComplex(7.003,-4.5811);
+      expect( ciso.getVoltageAt("n3") ).toBeComplex(-0.2878,0.1883);
     });
   });
 });
