@@ -236,9 +236,24 @@
 		return this.getVoltageAt(node1).subtract(this.getVoltageAt(node2));
 	};
 
-	CiSo.prototype.getCurrent = function() {
-		var res = this.solve();
-		return res.elements[0][this.nodes.length - 1];
+	CiSo.prototype.getCurrent = function(voltageSource) {
+		var sources = this.voltageSources,
+				res     = this.solve(),
+				sourceIndex = null,
+				i, ii;
+
+		for (i = 0, ii = sources.length; i < ii; i++) {
+			if (sources[i].label == voltageSource) {
+				sourceIndex = i;
+				break;
+			}
+		}
+
+		if (sourceIndex === null) {
+			throw Error("No voltage source "+voltageSource);
+		}
+
+		return res.elements[0][this.nodes.length - 1 - i];
 	}
 
 	window.CiSo = CiSo;
