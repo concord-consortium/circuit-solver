@@ -1,9 +1,0 @@
-// Routines for working with square, non-singular matrices with complex elements
-
-// Adapted from Sylvester
-
-function Matrix () {}
-
-Matrix.prototype = {
-	
-}
