@@ -213,7 +213,125 @@
 		}
 	};
 
+	/**
+	 * Here we delete any nodes, components and voltage sources that have
+	 * no connection to the reference node.
+	 */
+	CiSo.prototype.cleanCircuit = function () {
+		var nodes = this.nodes,
+				nodeMap = this.nodeMap,
+				components = this.components,
+				component,
+				referenceNode = this.referenceNode,
+				knownConnectedNodes = [],
+				source,
+				node, i, ii;
+
+		function clone(arr) {
+			var cln = []
+			for (var i in arr) {
+				cln[i] = arr[i];
+			}
+			return cln;
+		}
+
+		nodeMap = clone(nodeMap);
+
+		function squash(arr) {
+			var newArr = [];
+			for (var i=0, ii=arr.length; i<ii; i++) {
+				if (arr[i] !== null) newArr.push(arr[i]);
+			}
+			return newArr;
+		}
+
+		function canReachReferenceNode(node, nodeMap) {
+			var connectedComponents = nodeMap[node],
+					component, compNodes,
+					connectedNodes = [],
+					didRemove,
+					i, ii, j, jj;
+
+			if (node === referenceNode) return true;
+
+			if (~knownConnectedNodes.indexOf(node)) return true;
+
+			if (!connectedComponents || connectedComponents.length === 0) return false;
+
+			delete nodeMap[node];
+
+			for (i = 0, ii = connectedComponents.length; i < ii; i++) {
+				component = connectedComponents[i];
+				compNodes = clone(component.nodes);
+				compNodes.splice(compNodes.indexOf(node), 1);
+				connectedNodes = connectedNodes.concat(compNodes);
+			}
+
+			for (j = 0, jj = connectedNodes.length; j < jj; j++) {
+				if (canReachReferenceNode(connectedNodes[j], nodeMap)) {
+					knownConnectedNodes.push(node);
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		// Remove all nodes that aren't reachable from reference node
+		for (i = 0, ii = nodes.length; i<ii; i++) {
+			node = nodes[i];
+			if (node) {
+				if (!canReachReferenceNode(node, nodeMap)) {
+					nodes[i] = null;
+				}
+			}
+		}
+
+		this.nodes = squash(nodes);
+
+		// remove all components not attached on two reachable nodes
+		nodeMap = this.nodeMap;
+
+		function removeComponentFromNodeMap(component, node) {
+			var components = clone(nodeMap[node]),
+					i, ii;
+			nodeMap[node] = [];
+			for (i = 0, ii = components.length; i<ii; i++) {
+				if (components[i].id !== component.id) {
+					nodeMap[node].push(components[i]);
+				}
+			}
+
+		}
+
+		for (i = 0, ii=components.length; i<ii; i++) {
+			component = components[i];
+			if (!(~nodes.indexOf(component.nodes[0]) && ~nodes.indexOf(component.nodes[1]))) {
+				removeComponentFromNodeMap(component, component.nodes[0]);
+				removeComponentFromNodeMap(component, component.nodes[1]);
+				components[i] = null;
+			}
+		}
+
+		this.components = squash(components);
+
+		// Remove all voltage sources that aren't attached to two reachable nodes
+		for (i = 0, ii=this.voltageSources.length; i<ii; i++) {
+			source = this.voltageSources[i];
+			if (!(~nodes.indexOf(source.positiveNode) && ~nodes.indexOf(source.negativeNode))) {
+				this.voltageSources[i] = null;
+			}
+		}
+
+		this.voltageSources = squash(this.voltageSources);
+
+		// Reset reference node index
+		this.referenceNodeIndex = this.nodes.indexOf(referenceNode);
+	};
+
 	CiSo.prototype.solve = function () {
+		this.cleanCircuit();
+
 		this.createAMatrix();
 		this.createZMatrix();
 

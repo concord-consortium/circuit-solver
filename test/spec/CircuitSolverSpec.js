@@ -210,6 +210,20 @@ describe("CircuitSolver", function() {
 	});
 
 	describe("Solving basic DC circuits", function() {
+		it("We can solve a 1-resistor circuit", function() {
+			var ciso = new CiSo();
+			ciso.addComponent("R1", "Resistor", 5000, ["n1", "n2"]);
+			ciso.addVoltageSource("DCV1",10,"n1","n2");
+
+			var v1 = ciso.getVoltageAt("n1");
+			expect(v1.real).toBe(10);
+			var v3 = ciso.getVoltageAt("n2");
+			expect(v3.real).toBe(0);
+
+			var i = ciso.getCurrent("DCV1");
+			expect(i.real).toBeAbout(-0.002);
+		});
+
 		it("We can solve a 2-resistor series circuit", function() {
 			var ciso = new CiSo();
 			ciso.addComponent("R1", "Resistor", 5000, ["n1", "n2"]);
@@ -410,6 +424,29 @@ describe("CircuitSolver", function() {
 			expect( ciso.getVoltageAt("n2").real ).toBe(0);
 			expect( ciso.getVoltageAt("n3").real ).toBeAbout(-7.2);
 			expect( ciso.getVoltageAt("n4").real ).toBeAbout(-18);
+		});
+
+		it("We can use an ohmmeter in a Sparks activity", function() {
+			var ciso = new CiSo();
+			ciso.addVoltageSource("DCV1",12,"n1","n99");
+			ciso.addComponent("R1", "Resistor", 1000, ["n1", "n2"]);
+			ciso.addComponent("R2", "Resistor", 2000, ["n2", "n3"]);
+			ciso.addComponent("R2", "Resistor", 3000, ["n3", "n4"]);
+			ciso.addVoltageSource("ohmmeterBattery",1,"n1","n2");
+			ciso.setReferenceNode("n2");
+
+			expect(ciso.getCurrent("ohmmeterBattery").magnitude).toBeAbout(0.001);
+
+			ciso = new CiSo();
+			ciso.addVoltageSource("DCV1",12,"n98","n99");
+			ciso.addComponent("R1", "Resistor", 1000, ["n1", "n2"]);
+			ciso.addComponent("R2", "Resistor", 2000, ["n2", "n3"]);
+			ciso.addComponent("R2", "Resistor", 3000, ["n3", "n4"]);
+			ciso.addVoltageSource("ohmmeterBattery",1,"n1","n2");
+			ciso.setReferenceNode("n2");
+
+			expect(ciso.getCurrent("ohmmeterBattery").magnitude).toBeAbout(0.001);
+
 		});
 	});
 
