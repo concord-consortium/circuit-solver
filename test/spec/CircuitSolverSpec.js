@@ -7,7 +7,7 @@ describe("CircuitSolver", function() {
 		it("We can add a component", function() {
 			ciso.addComponent("R1", "Resistor", 5000, ["n1", "n2"]);
 			numComponents = ciso.components.length;
-			firstComponentLabel = ciso.components[0].label;
+			firstComponentLabel = ciso.components[0].id;
 			firstComponentType = ciso.components[0].type;
 			firstComponentValue = ciso.components[0].value;
 			firstComponentNodes = ciso.components[0].nodes;
@@ -23,7 +23,7 @@ describe("CircuitSolver", function() {
 	 it("We can add a second component", function() {
 			ciso.addComponent("C1", "Capacitor", 0.000001, ["n2", "n3"]);
 			numComponents = ciso.components.length;
-			secondComponentLabel = ciso.components[1].label;
+			secondComponentLabel = ciso.components[1].id;
 			secondComponentType = ciso.components[1].type;
 			secondComponentValue = ciso.components[1].value;
 			secondComponentNodes = ciso.components[1].nodes;
@@ -38,7 +38,7 @@ describe("CircuitSolver", function() {
 		it("We can add a third component", function() {
 			ciso.addComponent("L1", "Inductor", 0.00002, ["n3", "n4"]);
 			numComponents = ciso.components.length;
-			thirdComponentLabel = ciso.components[2].label;
+			thirdComponentLabel = ciso.components[2].id;
 			thirdComponentType = ciso.components[2].type;
 			thirdComponentValue = ciso.components[2].value;
 			thirdComponentNodes = ciso.components[2].nodes;
@@ -111,7 +111,7 @@ describe("CircuitSolver", function() {
 			expect(testNode).toBe("n3");
 			expect(ciso.getLinkedComponents(testNode)).toExist();
 			expect(ciso.getLinkedComponents(testNode).length).toBe(2);
-			expect(ciso.getLinkedComponents(testNode)[1].label).toBe("L1");
+			expect(ciso.getLinkedComponents(testNode)[1].id).toBe("L1");
 		});
 
 		it("We can get the index of nodes", function() {

@@ -7,7 +7,6 @@
 		this.nodeMap = {};				// a map of nodes: {"n1": [comp1, comp2], "n2": [comp2, comp3] ...}
 		this.nodes = [];					// an array of all nodes
 		this.voltageSources = [];
-		this.wires = [];
 		this.AMatrix = [];
 		this.ZMatrix = [];
 		this.referenceNode = null;
@@ -45,8 +44,8 @@
 		return index;
 	};
 
-	var Component = function(label, type, value, nodes) {
-		this.label = label;
+	var Component = function(id, type, value, nodes) {
+		this.id = id;
 		this.type = type;
 		this.value = value;
 		this.nodes = nodes;
@@ -75,16 +74,16 @@
 		return this.getImpedance(freq).inverse().negative();
 	};
 
-	var VoltageSource = function (label,voltage,positiveNode,negativeNode,frequency){
-		this.label = label;
+	var VoltageSource = function (id,voltage,positiveNode,negativeNode,frequency){
+		this.id = id;
 		this.voltage = voltage;
 		this.positiveNode = positiveNode;
 		this.negativeNode = negativeNode;
 		this.frequency = frequency || 0;
 	};
 
-	CiSo.prototype.addComponent = function (label,type,value,nodeLabels) {
-		var component = new Component(label,type,value,nodeLabels), // Make a new component with the right properties
+	CiSo.prototype.addComponent = function (id,type,value,nodeLabels) {
+		var component = new Component(id,type,value,nodeLabels), // Make a new component with the right properties
 				i, ii, node;
 
 		// Push the new component onto the components array
@@ -101,8 +100,8 @@
 		}
 	};
 
-	CiSo.prototype.addVoltageSource = function (label,voltage,positiveNode,negativeNode,frequency) {
-		var source = new VoltageSource(label,voltage,positiveNode,negativeNode,frequency);
+	CiSo.prototype.addVoltageSource = function (id,voltage,positiveNode,negativeNode,frequency) {
+		var source = new VoltageSource(id,voltage,positiveNode,negativeNode,frequency);
 		this.voltageSources.push(source);
 
 		if (!this.nodeMap[positiveNode]) {
