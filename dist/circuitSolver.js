@@ -7,7 +7,6 @@
 		this.nodeMap = {};				// a map of nodes: {"n1": [comp1, comp2], "n2": [comp2, comp3] ...}
 		this.nodes = [];					// an array of all nodes
 		this.voltageSources = [];
-		this.wires = [];
 		this.AMatrix = [];
 		this.ZMatrix = [];
 		this.referenceNode = null;
@@ -45,8 +44,8 @@
 		return index;
 	};
 
-	var Component = function(label, type, value, nodes) {
-		this.label = label;
+	var Component = function(id, type, value, nodes) {
+		this.id = id;
 		this.type = type;
 		this.value = value;
 		this.nodes = nodes;
@@ -75,16 +74,16 @@
 		return this.getImpedance(freq).inverse().negative();
 	};
 
-	var VoltageSource = function (label,voltage,positiveNode,negativeNode,frequency){
-		this.label = label;
+	var VoltageSource = function (id,voltage,positiveNode,negativeNode,frequency){
+		this.id = id;
 		this.voltage = voltage;
 		this.positiveNode = positiveNode;
 		this.negativeNode = negativeNode;
 		this.frequency = frequency || 0;
 	};
 
-	CiSo.prototype.addComponent = function (label,type,value,nodeLabels) {
-		var component = new Component(label,type,value,nodeLabels), // Make a new component with the right properties
+	CiSo.prototype.addComponent = function (id,type,value,nodeLabels) {
+		var component = new Component(id,type,value,nodeLabels), // Make a new component with the right properties
 				i, ii, node;
 
 		// Push the new component onto the components array
@@ -101,8 +100,8 @@
 		}
 	};
 
-	CiSo.prototype.addVoltageSource = function (label,voltage,positiveNode,negativeNode,frequency) {
-		var source = new VoltageSource(label,voltage,positiveNode,negativeNode,frequency);
+	CiSo.prototype.addVoltageSource = function (id,voltage,positiveNode,negativeNode,frequency) {
+		var source = new VoltageSource(id,voltage,positiveNode,negativeNode,frequency);
 		this.voltageSources.push(source);
 
 		if (!this.nodeMap[positiveNode]) {
@@ -137,6 +136,8 @@
 				numSources = this.voltageSources.length,
 				arraySize = numNodes - 1 + numSources,
 				i, j;
+
+		this.AMatrix = [];
 
 		for (i = 0; i < arraySize; i++) {
 			this.AMatrix [i] = [];
@@ -202,7 +203,7 @@
 				sources = this.voltageSources,
 				i;
 
-		this.ZMatrix[0] = []
+		this.ZMatrix = [ [] ];
 
 		for (i=0; i<arraySize; i++) {
 			this.ZMatrix[0][i] = cZero.copy()
@@ -213,7 +214,125 @@
 		}
 	};
 
+	/**
+	 * Here we delete any nodes, components and voltage sources that have
+	 * no connection to the reference node.
+	 */
+	CiSo.prototype.cleanCircuit = function () {
+		var nodes = this.nodes,
+				nodeMap = this.nodeMap,
+				components = this.components,
+				component,
+				referenceNode = this.referenceNode,
+				knownConnectedNodes = [],
+				source,
+				node, i, ii;
+
+		function clone(arr) {
+			var cln = []
+			for (var i in arr) {
+				cln[i] = arr[i];
+			}
+			return cln;
+		}
+
+		nodeMap = clone(nodeMap);
+
+		function squash(arr) {
+			var newArr = [];
+			for (var i=0, ii=arr.length; i<ii; i++) {
+				if (arr[i] !== null) newArr.push(arr[i]);
+			}
+			return newArr;
+		}
+
+		function canReachReferenceNode(node, nodeMap) {
+			var connectedComponents = nodeMap[node],
+					component, compNodes,
+					connectedNodes = [],
+					didRemove,
+					i, ii, j, jj;
+
+			if (node === referenceNode) return true;
+
+			if (~knownConnectedNodes.indexOf(node)) return true;
+
+			if (!connectedComponents || connectedComponents.length === 0) return false;
+
+			delete nodeMap[node];
+
+			for (i = 0, ii = connectedComponents.length; i < ii; i++) {
+				component = connectedComponents[i];
+				compNodes = clone(component.nodes);
+				compNodes.splice(compNodes.indexOf(node), 1);
+				connectedNodes = connectedNodes.concat(compNodes);
+			}
+
+			for (j = 0, jj = connectedNodes.length; j < jj; j++) {
+				if (canReachReferenceNode(connectedNodes[j], nodeMap)) {
+					knownConnectedNodes.push(node);
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		// Remove all nodes that aren't reachable from reference node
+		for (i = 0, ii = nodes.length; i<ii; i++) {
+			node = nodes[i];
+			if (node) {
+				if (!canReachReferenceNode(node, nodeMap)) {
+					nodes[i] = null;
+				}
+			}
+		}
+
+		this.nodes = squash(nodes);
+
+		// remove all components not attached on two reachable nodes
+		nodeMap = this.nodeMap;
+
+		function removeComponentFromNodeMap(component, node) {
+			var components = clone(nodeMap[node]),
+					i, ii;
+			nodeMap[node] = [];
+			for (i = 0, ii = components.length; i<ii; i++) {
+				if (components[i].id !== component.id) {
+					nodeMap[node].push(components[i]);
+				}
+			}
+
+		}
+
+		for (i = 0, ii=components.length; i<ii; i++) {
+			component = components[i];
+			if (!(~nodes.indexOf(component.nodes[0]) && ~nodes.indexOf(component.nodes[1]))) {
+				removeComponentFromNodeMap(component, component.nodes[0]);
+				removeComponentFromNodeMap(component, component.nodes[1]);
+				components[i] = null;
+			}
+		}
+
+		this.components = squash(components);
+
+		// Remove all voltage sources that aren't attached to two reachable nodes
+		for (i = 0, ii=this.voltageSources.length; i<ii; i++) {
+			source = this.voltageSources[i];
+			if (!(~nodes.indexOf(source.positiveNode) && ~nodes.indexOf(source.negativeNode))) {
+				this.voltageSources[i] = null;
+			}
+		}
+
+		this.voltageSources = squash(this.voltageSources);
+
+		// Reset reference node index
+		this.referenceNodeIndex = this.nodes.indexOf(referenceNode);
+	};
+
 	CiSo.prototype.solve = function () {
+		this.cleanCircuit();
+
 		this.createAMatrix();
 		this.createZMatrix();
 
@@ -228,8 +347,12 @@
 		if (node === this.referenceNode) {
 			return $Comp(0);
 		}
-		var res = this.solve();
-		return res.elements[0][this.getNodeIndex(node)];
+		try {
+			var res = this.solve();
+			return res.elements[0][this.getNodeIndex(node)];
+		} catch (e) {
+			return $Comp(0);
+		}
 	};
 
 	CiSo.prototype.getVoltageBetween = function(node1, node2) {
@@ -237,23 +360,39 @@
 	};
 
 	CiSo.prototype.getCurrent = function(voltageSource) {
-		var sources = this.voltageSources,
-				res     = this.solve(),
+		var res,
+				sources,
 				sourceIndex = null,
 				i, ii;
 
+		try {
+			res = this.solve();
+		} catch (e) {
+			return $Comp(0);
+		}
+
+		sources = this.voltageSources
+
 		for (i = 0, ii = sources.length; i < ii; i++) {
-			if (sources[i].label == voltageSource) {
+			if (sources[i].id == voltageSource) {
 				sourceIndex = i;
 				break;
 			}
 		}
 
 		if (sourceIndex === null) {
-			throw Error("No voltage source "+voltageSource);
+			try {
+				throw Error("No voltage source "+voltageSource);
+			} catch (e) {
+				return $Comp(0);
+			}
 		}
 
-		return res.elements[0][this.nodes.length - 1 - i];
+		try {
+			return res.elements[0][this.nodes.length - 1 + sourceIndex];
+		} catch (e) {
+			return $Comp(0);
+		}
 	}
 
 	window.CiSo = CiSo;
@@ -261,128 +400,131 @@
 
 
 var Complex = function(real, imag) {
-	if (!(this instanceof Complex)) {
-		return new Complex (real, imag);
-	}
+  if (!(this instanceof Complex)) {
+    return new Complex (real, imag);
+  }
 
-	if (typeof real === "string" && imag === null) {
-		return Complex.parse (real);
-	}
+  if (typeof real === "string" && imag === null) {
+    return Complex.parse (real);
+  }
 
-	this.real = real || 0;
-	this.imag = imag || 0;
+  this.real = real || 0;
+  this.imag = imag || 0;
+
+  this.magnitude  = Math.sqrt(this.real*this.real + this.imag*this.imag);
+  this.angle      = Math.atan2(this.imag, this.real);
 };
 
 Complex.prototype = {
-	copy: function() {
-		return new Complex (this.real, this.imag);
-	},
+  copy: function() {
+    return new Complex (this.real, this.imag);
+  },
 
-	add: function(operand) {
-		var real, imag;
+  add: function(operand) {
+    var real, imag;
 
-		if (operand instanceof Complex) {
-			real = operand.real;
-			imag = operand.imag;
-		} else {
-			real = operand;
-			imag = 0;
-		}
-		return new Complex(this.real + real, this.imag + imag);
-	},
+    if (operand instanceof Complex) {
+      real = operand.real;
+      imag = operand.imag;
+    } else {
+      real = operand;
+      imag = 0;
+    }
+    return new Complex(this.real + real, this.imag + imag);
+  },
 
-	subtract: function(operand) {
-		var real, imag;
+  subtract: function(operand) {
+    var real, imag;
 
-		if (operand instanceof Complex) {
-			real = operand.real;
-			imag = operand.imag;
-		} else {
-			real = operand;
-			imag = 0;
-		}
-		return new Complex(this.real - real, this.imag - imag);
-	},
+    if (operand instanceof Complex) {
+      real = operand.real;
+      imag = operand.imag;
+    } else {
+      real = operand;
+      imag = 0;
+    }
+    return new Complex(this.real - real, this.imag - imag);
+  },
 
-	multiply: function(operand) {
-		var real, imag, newReal, newImag;
+  multiply: function(operand) {
+    var real, imag, newReal, newImag;
 
-		if (operand instanceof Complex) {
-			real = operand.real;
-			imag = operand.imag;
-		} else {
-			real = operand;
-			imag = 0;
-		}
+    if (operand instanceof Complex) {
+      real = operand.real;
+      imag = operand.imag;
+    } else {
+      real = operand;
+      imag = 0;
+    }
 
-		newReal = this.real * real - this.imag * imag;
-		newImag = this.real * imag + this.imag * real
+    newReal = this.real * real - this.imag * imag;
+    newImag = this.real * imag + this.imag * real;
 
-		return new Complex(newReal, newImag);
-	},
+    return new Complex(newReal, newImag);
+  },
 
-	divide: function(operand) {
-		var real, imag, denom, newReal, newImag;
+  divide: function(operand) {
+    var real, imag, denom, newReal, newImag;
 
-		if (operand instanceof Complex) {
-			real = operand.real;
-			imag = operand.imag;
-		} else {
-			real = operand;
-			imag = 0;
-		}
+    if (operand instanceof Complex) {
+      real = operand.real;
+      imag = operand.imag;
+    } else {
+      real = operand;
+      imag = 0;
+    }
 
-		denom = real * real + imag * imag;
-		newReal = (this.real * real + this.imag * imag) / denom;
-		newImag = (this.imag * real - this.real * imag) / denom;
+    denom = real * real + imag * imag;
+    newReal = (this.real * real + this.imag * imag) / denom;
+    newImag = (this.imag * real - this.real * imag) / denom;
 
-		return new Complex(newReal, newImag);
-	},
+    return new Complex(newReal, newImag);
+  },
 
-	inverse: function() {
-		var one = new Complex (1,0);
-		return one.divide(this);
-	},
+  inverse: function() {
+    var one = new Complex (1,0);
+    return one.divide(this);
+  },
 
-	negative: function() {
-		var zero = new Complex (0,0);
-		return zero.subtract(this);
-	},
+  negative: function() {
+    var zero = new Complex (0,0);
+    return zero.subtract(this);
+  },
 
-	equals: function(num) {
-		if (num instanceof Complex) {
-			return this.real === num.real && this.imag === num.imag;
-		} else if (typeof num === "number") {
-			return this.real === num && this.imag === 0;
-		}
-		return false;
-	},
+  equals: function(num) {
+    if (num instanceof Complex) {
+      return this.real === num.real && this.imag === num.imag;
+    } else if (typeof num === "number") {
+      return this.real === num && this.imag === 0;
+    }
+    return false;
+  },
 
-	toString: function() {
-		return this.real + "i" + this.imag;
-	}
+  toString: function() {
+    return this.real + "i" + this.imag;
+  }
 };
 
 // expect a+bi format
 Complex.parse = function(str) {
-	if (!str) {
+  if (!str) {
     return null;
   }
 
-  var parts = /(.*)([+,\-].*i)/.exec(str),	// try to tranform 'str' into [str, real, imaginary]
+  var parts = /(.*)([+,\-].*i)/.exec(str),  // try to tranform 'str' into [str, real, imaginary]
       real,
       imaginary;
 
   if (parts && parts.length === 3) {
     real      = parseFloat(parts[1]);
-    imaginary = parseFloat(parts[2].replace("i", ""));	// imag. is of form (+/-)123i. We remove the i, but keep the +/-
+    imaginary = parseFloat(parts[2].replace("i", ""));  // imag. is of form (+/-)123i. We remove the i, but keep the +/-
   } else {
     real      = parseFloat(str);
     imaginary = 0;
   }
 
   if ( isNaN(real) || isNaN(imaginary) ) {
-  	throw new Error("Invalid input to Complex.parse, expecting a + bi format, instead was: "+str);
+    throw new Error("Invalid input to Complex.parse, expecting a + bi format, instead was: "+str);
   }
 
   return new Complex(real, imaginary);
@@ -390,11 +532,11 @@ Complex.parse = function(str) {
 
 // Constructor functions
 $Comp = function() {
-	if (typeof arguments[0] === "string") {
-		return Complex.parse(arguments[0])
-	}
-	return new Complex(arguments[0],arguments[1]);
-}
+  if (typeof arguments[0] === "string") {
+    return Complex.parse(arguments[0]);
+  }
+  return new Complex(arguments[0],arguments[1]);
+};
 
 
 

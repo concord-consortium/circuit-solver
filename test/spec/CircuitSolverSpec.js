@@ -448,6 +448,17 @@ describe("CircuitSolver", function() {
 			expect(ciso.getCurrent("ohmmeterBattery").magnitude).toBeAbout(0.001);
 
 		});
+
+		it("We should get 0V for a bad circuit", function() {
+			var ciso = new CiSo();
+			ciso.addVoltageSource("DCV1",12,"n1","n2");
+			ciso.addComponent("R1", "Resistor", 1000, ["n2", "n3"]);
+
+			expect(ciso.getVoltageAt("n1").magnitude).toBe(0);
+			expect(ciso.getVoltageAt("n2").magnitude).toBe(0);
+			expect(ciso.getVoltageAt("n3").magnitude).toBe(0);
+
+		});
 	});
 
 	describe("Calculating matrices for AC circuits", function() {
