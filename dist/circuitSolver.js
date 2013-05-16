@@ -44,28 +44,51 @@
 		return index;
 	};
 
-	var Component = function(id, type, value, nodes) {
+	var Component = function(id, type, value_forward, value_reverse, nodes) {
 		this.id = id;
 		this.type = type;
-		this.value = value;
+		this.value_forward = value_forward;
+		this.value_reverse = value_reverse;// the two values differ only for a diode
 		this.nodes = nodes;
 	};
 
+	Component.prototype.bias = function() {
+		var bias_direction = true; // bias directon is set to true by default for all components; only for a reverse-biased diode, it is false
+		ciso = new CiSo();
+		if (this.type === "Diode" && ciso.getVoltageBetween(this.nodes[0],this.nodes[1]) < 0) {
+			bias_direction = false;
+			ciso.solve();
+			if (ciso.getVoltageBetween(this.nodes[0],this.nodes[1]) > 0) {
+				try {
+					throw Error("Circuit unsolvable with current diode approximations");
+				} catch (e) {
+					return $Comp(0);
+				}
+			}
+		}
+		
+		return bias_direction;
+	}
 	var twoPi = 2*Math.PI;
 
 	Component.prototype.getImpedance = function(frequency) {
 		var impedance = $Comp(0,0);
 		if (this.type === "Resistor") {
-			impedance.real = this.value;
+			impedance.real = this.value_forward;
 			impedance.imag = 0;
 		}
 		else if (this.type == "Capacitor") {
 			impedance.real = 0;
-			impedance.imag = -1/(twoPi * frequency * this.value);
+			impedance.imag = -1/(twoPi * frequency * this.value_forward);
 		}
 		else if (this.type == "Inductor") {
 			impedance.real = 0;
-			impedance.imag = twoPi * frequency * this.value;
+			impedance.imag = twoPi * frequency * this.value_forward;
+		}
+		
+		else if (this.type == "Diode") {
+			impedance.real = this.bias ? this.value_forward : this.value_reverse;
+			impedance.imag = 0;
 		}
 		return impedance;
 	};
