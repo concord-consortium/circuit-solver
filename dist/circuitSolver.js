@@ -44,12 +44,14 @@
 		return index;
 	};
 
-	var Component = function(id, type, value_forward, value_reverse, nodes) {
-		this.id = id;
-		this.type = type;
-		this.value_forward = value_forward;
-		this.value_reverse = value_reverse;// the two values differ only for a diode
-		this.nodes = nodes;
+	var Component = function(args) {
+		this.id = args.id;
+		this.type = args.type;
+		this.value = args.value;
+		this.nodes = args.nodes;
+		if (this.type === "Diode") {
+			this.value_reverse = args.value_reverse;// the two values differ only for a diode
+		}
 	};
 
 	Component.prototype.bias = function() {
@@ -57,37 +59,32 @@
 		ciso = new CiSo();
 		if (this.type === "Diode" && ciso.getVoltageBetween(this.nodes[0],this.nodes[1]) < 0) {
 			bias_direction = false;
-			ciso.solve();
-			if (ciso.getVoltageBetween(this.nodes[0],this.nodes[1]) > 0) {
-				try {
-					throw Error("Circuit unsolvable with current diode approximations");
-				} catch (e) {
-					return $Comp(0);
-				}
-			}
 		}
 		
 		return bias_direction;
 	}
+	
 	var twoPi = 2*Math.PI;
+	var frequency = 0;
 
 	Component.prototype.getImpedance = function(frequency) {
+		frequency = this.frequency;
 		var impedance = $Comp(0,0);
 		if (this.type === "Resistor") {
-			impedance.real = this.value_forward;
+			impedance.real = this.value;
 			impedance.imag = 0;
 		}
 		else if (this.type == "Capacitor") {
 			impedance.real = 0;
-			impedance.imag = -1/(twoPi * frequency * this.value_forward);
+			impedance.imag = -1/(twoPi * frequency * this.value);
 		}
 		else if (this.type == "Inductor") {
 			impedance.real = 0;
-			impedance.imag = twoPi * frequency * this.value_forward;
+			impedance.imag = twoPi * frequency * this.value;
 		}
 		
 		else if (this.type == "Diode") {
-			impedance.real = this.bias ? this.value_forward : this.value_reverse;
+			impedance.real = this.bias ? this.value : this.value_reverse;
 			impedance.imag = 0;
 		}
 		return impedance;
@@ -105,8 +102,8 @@
 		this.frequency = frequency || 0;
 	};
 
-	CiSo.prototype.addComponent = function (id,type,value,nodeLabels) {
-		var component = new Component(id,type,value,nodeLabels), // Make a new component with the right properties
+	CiSo.prototype.addComponent = function (args) {
+		var component = new Component(args), // Make a new component with the right properties
 				i, ii, node;
 
 		// Push the new component onto the components array
@@ -366,20 +363,20 @@
 		return res;
 	};
 
-	CiSo.prototype.getVoltageAt = function(node) {
+	CiSo.prototype.getVoltageAt = function(node, time) {
 		if (node === this.referenceNode) {
 			return $Comp(0);
 		}
 		try {
 			var res = this.solve();
-			return res.elements[0][this.getNodeIndex(node)];
+			return res.elements[0][this.getNodeIndex(node)]*Math.cos(twoPI * frequency * time); // Calculate the instantaneous voltage at a node
 		} catch (e) {
 			return $Comp(0);
 		}
 	};
 
-	CiSo.prototype.getVoltageBetween = function(node1, node2) {
-		return this.getVoltageAt(node1).subtract(this.getVoltageAt(node2));
+	CiSo.prototype.getVoltageBetween = function(node1, node2, time) {
+		return this.getVoltageAt(node1, time).subtract(this.getVoltageAt(node2, time));
 	};
 
 	CiSo.prototype.getCurrent = function(voltageSource) {
