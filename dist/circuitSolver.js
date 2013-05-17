@@ -44,15 +44,13 @@
 		return index;
 	};
 
-	var Component = function(args) {
-		this.id = args.id;
-		this.type = args.type;
-		this.value = args.value;
-		this.nodes = args.nodes;
-		if (this.type === "Diode") {
-			this.value_reverse = args.value_reverse;// the two values differ only for a diode
-		}
-	};
+	var Component = function(id, type, value_forward, value_reverse, nodes) {
+		this.id = id;
+		this.type = type;
+		this.value_forward = value_forward;
+		this.value_reverse = value_reverse;// the two values differ only for a diode
+		this.nodes = nodes;
+	}
 
 	Component.prototype.bias = function() {
 		var bias_direction = true; // bias directon is set to true by default for all components; only for a reverse-biased diode, it is false
