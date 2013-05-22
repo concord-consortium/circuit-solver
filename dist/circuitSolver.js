@@ -11,6 +11,7 @@
 		this.ZMatrix = [];
 		this.referenceNode = null;
 		this.referenceNodeIndex = null;
+		this.frequency =$Comp(0);
 	};
 
 	CiSo.prototype.getLinkedComponents = function (node) {
@@ -44,29 +45,18 @@
 		return index;
 	};
 
-		var Component = function(id, type, value_forward, value_reverse, nodes) {
+	var Component = function(id, type, value, nodes, value_reverse, bias) {
 		this.id = id;
 		this.type = type;
-		this.value_forward = value_forward;
-		this.value_reverse = value_reverse;// the two values differ only for a diode
+		this.value = value;
 		this.nodes = nodes;
+		this.value_reverse = value_reverse;
+		this.bias = bias;
 	};
 
-	Component.prototype.bias = function() {
-		var bias_direction = true; // bias directon is set to true by default for all components; only for a reverse-biased diode, it is false
-		ciso = new CiSo();
-		if (this.type === "Diode" && ciso.getVoltageBetween(this.nodes[0],this.nodes[1]) < 0) {
-			bias_direction = false;
-		}
-
-		return bias_direction;
-	}
-
 	var twoPi = 2*Math.PI;
-	var frequency = 0;
 
 	Component.prototype.getImpedance = function(frequency) {
-		frequency = this.frequency;
 		var impedance = $Comp(0,0);
 		if (this.type === "Resistor") {
 			impedance.real = this.value;
@@ -80,9 +70,8 @@
 			impedance.real = 0;
 			impedance.imag = twoPi * frequency * this.value;
 		}
-
 		else if (this.type == "Diode") {
-			impedance.real = this.bias ? this.value : this.value_reverse;
+			impedance.real = this.value;
 			impedance.imag = 0;
 		}
 		return impedance;
@@ -100,8 +89,8 @@
 		this.frequency = frequency || 0;
 	};
 
-	CiSo.prototype.addComponent = function (args) {
-		var component = new Component(args), // Make a new component with the right properties
+	CiSo.prototype.addComponent = function (id, type, value, nodeLabels, value_reverse) {
+		var component = new Component(id, type, value, nodeLabels, value_reverse), // Make a new component with the right properties
 				i, ii, node;
 
 		// Push the new component onto the components array
@@ -115,11 +104,12 @@
 				this.nodes.push(node);
 			}
 			this.nodeMap[node].push(component);
-		}
+		}	
 	};
 
 	CiSo.prototype.addVoltageSource = function (id,voltage,positiveNode,negativeNode,frequency) {
 		var source = new VoltageSource(id,voltage,positiveNode,negativeNode,frequency);
+		this.frequency=frequency;
 		this.voltageSources.push(source);
 
 		if (!this.nodeMap[positiveNode]) {
@@ -230,6 +220,7 @@
 		for (i = 0; i < sources.length; i++) {
 			this.ZMatrix[0][numNodes - 1 + i].real = sources[i].voltage;
 		}
+		return this.ZMatrix;
 	};
 
 	/**
@@ -349,32 +340,55 @@
 	};
 
 	CiSo.prototype.solve = function () {
+		components = this.components;
+		
 		this.cleanCircuit();
-
 		this.createAMatrix();
-		this.createZMatrix();
-
+		//this.createZMatrix();
 		aM = $M(this.AMatrix);
-		zM = $M(this.ZMatrix);
+		zM = $M(this.createZMatrix());
 		invAM = aM.inv();
 		res = zM.x(invAM);
+
+		var check = true, i, ii,temp;
+
+		while (check === true) {	
+			check = false;
+			for (i = 0, ii = components.length; i<ii; i++) {
+				if (components[i].type ==="Diode" && (res.elements[0][this.getNodeIndex(components[i].nodes[0])] - res.elements[0][this.getNodeIndex(components[i].nodes[1])]) < 0) {
+					temp = components[i].value_reverse;
+					components[i].value_reverse = components[i].value;
+					components[i].value = temp;
+					this.cleanCircuit();
+					this.createAMatrix();
+					aM = $M(this.AMatrix);
+					zM = $M(this.createZMatrix());
+					invAM = aM.inv();
+					res = zM.x(invAM);
+
+					check = true;
+				}
+			}
+		} // when the iteration ends, the diode biases are correctly determined
+
 		return res;
 	};
 
-	CiSo.prototype.getVoltageAt = function(node, time) {
+	CiSo.prototype.getVoltageAt = function(node) {
 		if (node === this.referenceNode) {
 			return $Comp(0);
 		}
 		try {
 			var res = this.solve();
-			return res.elements[0][this.getNodeIndex(node)]*Math.cos(twoPI * frequency * time); // Calculate the instantaneous voltage at a node
+			return res.elements[0][this.getNodeIndex(node)];
 		} catch (e) {
-			return $Comp(0);
+			return e;
 		}
 	};
 
-	CiSo.prototype.getVoltageBetween = function(node1, node2, time) {
-		return this.getVoltageAt(node1, time).subtract(this.getVoltageAt(node2, time));
+
+	CiSo.prototype.getVoltageBetween = function(node1, node2) {
+		return this.getVoltageAt(node1).subtract(this.getVoltageAt(node2));
 	};
 
 	CiSo.prototype.getCurrent = function(voltageSource) {
