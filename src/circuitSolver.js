@@ -56,16 +56,6 @@
 
 	var twoPi = 2*Math.PI;
 
-/*	Component.prototype.bias = function(bias_direction) {
-		//var bias_direction = 1; // bias directon is set to 1 by default for all components; only for a reverse-biased diode, it is 0
-		//ciso = new CiSo();
-		//if (this.type === "Diode" && ciso.getVoltageBetween(this.nodes[0],this.nodes[1])*cos(twoPi*frequency*0) < 0) {
-		//	bias_direction = 0;
-		//}
-		this.bias_direction = bias_direction;
-		return bias_direction;
-	}   */
-
 	Component.prototype.getImpedance = function(frequency) {
 		var impedance = $Comp(0,0);
 		if (this.type === "Resistor") {
@@ -83,11 +73,6 @@
 		else if (this.type == "Diode") {
 			impedance.real = this.value;
 			impedance.imag = 0;
-			
-			//if (ciso.getVoltageBetween(this.nodes[0], this.nodes[1]) < 0) {
-			//	impedance.real = this.value_reverse;
-			//}
-
 		}
 		return impedance;
 	};
@@ -374,10 +359,8 @@
 					temp = components[i].value_reverse;
 					components[i].value_reverse = components[i].value;
 					components[i].value = temp;
-
 					this.cleanCircuit();
 					this.createAMatrix();
-					//this.createZMatrix();
 					aM = $M(this.AMatrix);
 					zM = $M(this.createZMatrix());
 					invAM = aM.inv();
@@ -387,12 +370,6 @@
 				}
 			}
 		} // when the iteration ends, the diode biases are correctly determined
-		
-		for (i = 0, ii = components.length; i<ii; i++) {
-				if (components[i].type === "Diode") {
-					components[i].type = "Resistor";
-				}
-			}
 
 		return res;
 	};
