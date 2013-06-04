@@ -11,7 +11,7 @@
 		this.ZMatrix = [];
 		this.referenceNode = null;
 		this.referenceNodeIndex = null;
-		this.frequency =$Comp(0);
+		this.frequency = $Comp(0);
 	};
 
 	CiSo.prototype.getLinkedComponents = function (node) {
@@ -45,13 +45,15 @@
 		return index;
 	};
 
-	var Component = function(id, type, value, nodes, value_reverse, bias) {
+	var Component = function(id, type, value, nodes, value_reverse) {
 		this.id = id;
 		this.type = type;
 		this.value = value;
 		this.nodes = nodes;
-		this.value_reverse = value_reverse;
-		this.bias = bias;
+		if (type === "Diode") 
+			this.value_reverse = value_reverse;
+		else 
+			this.value_reverse = value;
 	};
 
 	var twoPi = 2*Math.PI;
@@ -89,8 +91,8 @@
 		this.frequency = frequency || 0;
 	};
 
-	CiSo.prototype.addComponent = function (id, type, value, nodeLabels, value_reverse) {
-		var component = new Component(id, type, value, nodeLabels, value_reverse), // Make a new component with the right properties
+	CiSo.prototype.addComponent = function (id,type,value,nodeLabels, value_reverse) {
+		var component = new Component(id,type,value,nodeLabels, value_reverse), // Make a new component with the right properties
 				i, ii, node;
 
 		// Push the new component onto the components array
@@ -104,12 +106,11 @@
 				this.nodes.push(node);
 			}
 			this.nodeMap[node].push(component);
-		}	
+		}
 	};
 
 	CiSo.prototype.addVoltageSource = function (id,voltage,positiveNode,negativeNode,frequency) {
 		var source = new VoltageSource(id,voltage,positiveNode,negativeNode,frequency);
-		this.frequency=frequency;
 		this.voltageSources.push(source);
 
 		if (!this.nodeMap[positiveNode]) {
@@ -220,7 +221,6 @@
 		for (i = 0; i < sources.length; i++) {
 			this.ZMatrix[0][numNodes - 1 + i].real = sources[i].voltage;
 		}
-		return this.ZMatrix;
 	};
 
 	/**
@@ -340,42 +340,41 @@
 	};
 
 	CiSo.prototype.solve = function () {
+	
 		components = this.components;
-		
+
 		this.cleanCircuit();
+
 		this.createAMatrix();
-		//this.createZMatrix();
+		this.createZMatrix();
+
 		aM = $M(this.AMatrix);
-		zM = $M(this.createZMatrix());
+		zM = $M(this.ZMatrix);
 		invAM = aM.inv();
 		res = zM.x(invAM);
 
 		var check = true, i, ii, temp;
-
 		while (check === true) {	
 			check = false;
 			for (i = 0, ii = components.length; i<ii; i++) {
-				if (components[i].type === "Diode") {
+					
+				if (components[i].type === "Diode" && ((res.elements[0][this.getNodeIndex(components[i].nodes[0])] - res.elements[0][this.getNodeIndex(components[i].nodes[1])]) < 0)) {
+					temp = components[i].value_reverse;
 					components[i].value_reverse = components[i].value;
-				}
-				else {
-					components[i].type = "Resistor";
-					if ((res.elements[0][this.getNodeIndex(components[i].nodes[0])] - res.elements[0][this.getNodeIndex(components[i].nodes[1])]) < 0) {
-						temp = components[i].value_reverse;
-						components[i].value_reverse = components[i].value;
-						components[i].value = temp;
-						this.cleanCircuit();
-						this.createAMatrix();
-						aM = $M(this.AMatrix);
-						zM = $M(this.createZMatrix());
-						invAM = aM.inv();
-						res = zM.x(invAM);
+					components[i].value = temp;
+					this.cleanCircuit();
+					this.createAMatrix();
+					aM = $M(this.AMatrix);
+					zM = $M(this.createZMatrix());
+					invAM = aM.inv();
+					res = zM.x(invAM);
 
-						check = true;
+					check = true;
 				}
+				
 			}
 		} // when the iteration ends, the diode biases are correctly determined
-
+		
 		return res;
 	};
 
@@ -387,10 +386,9 @@
 			var res = this.solve();
 			return res.elements[0][this.getNodeIndex(node)];
 		} catch (e) {
-			return e;
+			return $Comp(0);
 		}
 	};
-
 
 	CiSo.prototype.getVoltageBetween = function(node1, node2) {
 		return this.getVoltageAt(node1).subtract(this.getVoltageAt(node2));
