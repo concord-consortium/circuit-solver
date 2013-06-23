@@ -402,6 +402,26 @@
             expect(ciso.getVoltageAt("n4", 0).real).toBeAbout(4.615);
         });
 
+        it("We can solve a complex diode-resistor wheatstone bridge circuit", function () {
+            var ciso = new CiSo();
+            // add nodes in arbitrary order
+            ciso.addComponent("R1", "Resistor", 1000, ["n1", "n3"]);
+            ciso.addComponent("R2", "Resistor", 2000, ["n1", "n4"]);
+            ciso.addComponent("R3", "Resistor", 1000, ["n4", "n2"]);
+            ciso.addComponent("D1", "Diode", 1000, ["n3", "n1"], 2000);
+            ciso.addComponent("D2", "Diode", 1000, ["n3", "n4"], 2000);
+            ciso.addComponent("D3", "Diode", 1000, ["n2", "n3"], 2000);
+            ciso.addComponent("D3", "Diode", 1000, ["n3", "n2"], 2000);
+            ciso.addVoltageSource("DCV1", 12, "n1", "n2");
+
+            expect(ciso.getVoltageAt("n1", 0).real).toBe(12);
+
+            expect(ciso.getCurrent("DCV1").real).toBeAbout(-0.013167);
+            expect(ciso.getVoltageAt("n2", 0).real).toBe(0);
+            expect(ciso.getVoltageAt("n3", 0).real).toBeAbout(5.67);
+            expect(ciso.getVoltageAt("n4", 0).real).toBeAbout(4.67);
+        });
+
         it("We can solve a diode-resistor series circuit", function () {
             var ciso = new CiSo();
             ciso.addComponent("R1", "Resistor", 5000, ["n1", "n2"]);
