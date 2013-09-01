@@ -14,7 +14,7 @@
         this.frequency = $Comp(0);
         this.time = 0;
     };
-
+    //Define CiSo	
     CiSo.prototype.getLinkedComponents = function (node) {
         return this.nodeMap[node];
     };
