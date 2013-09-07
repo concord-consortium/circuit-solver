@@ -4,9 +4,10 @@
 
     var CiSo = function () {
         this.components = [];
-        this.nodeMap = {};				// a map of nodes: {"n1": [comp1, comp2], "n2": [comp2, comp3] ...}
-        this.nodes = [];					// an array of all nodes
+        this.nodeMap = {};              // a map of nodes: {"n1": [comp1, comp2], "n2": [comp2, comp3] ...}
+        this.nodes = [];                    // an array of all nodes
         this.voltageSources = [];
+        this.currentSources = [];
         this.AMatrix = [];
         this.ZMatrix = [];
         this.referenceNode = null;
@@ -14,15 +15,15 @@
         this.frequency = $Comp(0);
         this.time = 0;
     };
-    //Define CiSo	
+
     CiSo.prototype.getLinkedComponents = function (node) {
         return this.nodeMap[node];
     };
 
     CiSo.prototype.getDiagonalMatrixElement = function (node, freq) {
         var neighborComponents = this.nodeMap[node],
-				matrixElement = $Comp(0, 0),
-				imp, i;
+                matrixElement = $Comp(0, 0),
+                imp, i;
         for (i = neighborComponents.length - 1; i >= 0; i--) {
             imp = neighborComponents[i].getImpedance(freq);
             matrixElement = matrixElement.add(imp.inverse());
@@ -46,16 +47,11 @@
         return index;
     };
 
-<<<<<<< HEAD
-    var Component = function (id, type, value, nodes, dark_current, value_reverse, bias) {
-=======
-    var Component = function (id, type, value, nodes, value_reverse) {
->>>>>>> 4a99a52f89755e30aaddc07255f8a9c2634f4da8
+    var Component = function (id, type, value, nodes, dark_current, value_reverse, bias, charge, flux, voltage_source, current_source) {
         this.id = id;
         this.type = type;
         this.value = value;
         this.nodes = nodes;
-<<<<<<< HEAD
         if (type === "Diode") {
             this.dark_current = dark_current;
             this.bias = true; //The default bias of the diode is forward
@@ -67,42 +63,32 @@
             this.value = 1;
             this.value_reverse = 1000000;
         }
+
+        if (type === "Capacitor") {
+            this.charge = 0;
+            this.voltage_source = null;
+        }
+
+        if (type === "Capacitor") {
+            this.flux = 0;
+            this.current_source = null;
+        }
     };
 
     var twoPi = 2 * Math.PI;
     var res_array_state = [];
-=======
-        if (type === "Diode")
-            this.value_reverse = value_reverse;
-        else
-            this.value_reverse = value;
-    };
 
-    var twoPi = 2 * Math.PI;
->>>>>>> 4a99a52f89755e30aaddc07255f8a9c2634f4da8
-
-    Component.prototype.getImpedance = function (frequency) {
+    Component.prototype.getImpedance = function () {
         var impedance = $Comp(0, 0);
         if (this.type === "Resistor") {
             impedance.real = this.value;
             impedance.imag = 0;
         }
-<<<<<<< HEAD
         else if (this.type == "Capacitor" || this.type == "Inductor") {
             impedance.real = 0;
             impedance.imag = 0;
         }
 
-=======
-        else if (this.type == "Capacitor") {
-            impedance.real = 0;
-            impedance.imag = -1 / (twoPi * frequency * this.value);
-        }
-        else if (this.type == "Inductor") {
-            impedance.real = 0;
-            impedance.imag = twoPi * frequency * this.value;
-        }
->>>>>>> 4a99a52f89755e30aaddc07255f8a9c2634f4da8
         else if (this.type == "Diode") {
             impedance.real = this.value;
             impedance.imag = 0;
@@ -114,30 +100,62 @@
         return this.getImpedance(freq).inverse().negative();
     };
 
-<<<<<<< HEAD
-    var VoltageSource = function (id, voltage, positiveNode, negativeNode, frequency, array) {
-=======
-    var VoltageSource = function (id, voltage, positiveNode, negativeNode, frequency) {
->>>>>>> 4a99a52f89755e30aaddc07255f8a9c2634f4da8
+    var VoltageSource = function (id, Voltage, positiveNode, negativeNode, frequency, array) {
         this.id = id;
-        this.voltage = voltage;
+        this.Voltage = Voltage;
         this.positiveNode = positiveNode;
         this.negativeNode = negativeNode;
         this.frequency = frequency || 0;
-<<<<<<< HEAD
         this.array = array;
     };
 
-    CiSo.prototype.addComponent = function (id, type, value, nodeLabels, dark_current, value_reverse, bias) {
-        var component = new Component(id, type, value, nodeLabels, dark_current, value_reverse, bias), // Make a new component with the right properties
-				i, ii, node;
+
+    var CurrentSource = function (id, Current, positiveNode, negativeNode, frequency, array) {
+        this.id = id;
+        this.Current = Current;
+        this.positiveNode = positiveNode;
+        this.negativeNode = negativeNode;
+        this.frequency = frequency || 0;
+        this.array = array;
+    };
+
+
+    CiSo.prototype.addComponent = function (id, type, value, nodeLabels, dark_current, value_reverse, bias, charge, flux, voltage_source, current_source) {
+        var component = new Component(id, type, value, nodeLabels, dark_current, value_reverse, bias, charge, flux, voltage_source, current_source), // Make a new component with the right properties
+                i, ii, node;
 
         if (type === "Capacitor") {
 
-            dark_current = 0;
+            charge = 0;
 
-            var source = new VoltageSource(id, dark_current / value, nodeLabels[0], nodeLabels[1], this.frequency);
+            var source = new VoltageSource(id + "VoltageSource", charge / value, nodeLabels[0], nodeLabels[1], Math.abs(this.frequency));
+            voltage_source = source;
             this.voltageSources.push(source);
+            var positiveNode = nodeLabels[0];
+            var negativeNode = nodeLabels[1];
+
+            if (!this.nodeMap[positiveNode]) {
+                this.nodeMap[positiveNode] = [];
+                this.nodes.push(positiveNode);
+            }
+
+            if (!this.nodeMap[negativeNode]) {
+                this.nodeMap[negativeNode] = [];
+                this.nodes.push(negativeNode);
+            }
+
+            if (!this.referenceNode) {
+                this.setReferenceNode(negativeNode);
+            }
+        }
+
+        if (type === "Inductor") {
+
+            flux = 0;
+
+            var source = new CurrentSource(id + "CurrentSource", flux / value, nodeLabels[0], nodeLabels[1], Math.abs(this.frequency));
+            current_source = source;
+            this.currentSources.push(source);
             var positiveNode = nodeLabels[0];
             var negativeNode = nodeLabels[1];
 
@@ -160,8 +178,8 @@
             var nodeLabels_diode_1 = [nodeLabels[1], nodeLabels[0]];
             var nodeLabels_diode_2 = [nodeLabels[1], nodeLabels[2]];
 
-            var component_diode_1 = new Component((id + '1'), "Diode", value, nodeLabels_diode_1, dark_current, value_reverse, bias);
-            var component_diode_2 = new Component((id + '2'), "Diode", value, nodeLabels_diode_2, dark_current, value_reverse, bias);
+            var component_diode_1 = new Component((id + '1'), "Diode", value, nodeLabels_diode_1, dark_current, value_reverse, bias, charge, flux, voltage_source, current_source);
+            var component_diode_2 = new Component((id + '2'), "Diode", value, nodeLabels_diode_2, dark_current, value_reverse, bias, charge, flux, voltage_source, current_source);
             this.components.push(component_diode_1);
             this.components.push(component_diode_2);
 
@@ -189,7 +207,7 @@
             if (type === "MOSFET")
                 component = new Component(id, "Resistor", value, nodeLabels);
 
-            component = new Component(id, type, value, nodeLabels, dark_current, value_reverse, bias);
+            component = new Component(id, type, value, nodeLabels, dark_current, value_reverse, bias, charge, flux, voltage_source, current_source);
 
             // Push the new component onto the components array
             this.components.push(component);
@@ -206,34 +224,30 @@
         }
     };
 
-    CiSo.prototype.addVoltageSource = function (id, voltage, positiveNode, negativeNode, frequency, array) {
+    CiSo.prototype.addVoltageSource = function (id, Voltage, positiveNode, negativeNode, frequency, array) {
         this.frequency = frequency;
-        var source = new VoltageSource(id, voltage, positiveNode, negativeNode, frequency, array);
-=======
-    };
+        var source = new VoltageSource(id, Voltage, positiveNode, negativeNode, frequency, array);
+        this.voltageSources.push(source);
 
-    CiSo.prototype.addComponent = function (id, type, value, nodeLabels, value_reverse) {
-        var component = new Component(id, type, value, nodeLabels, value_reverse), // Make a new component with the right properties
-				i, ii, node;
+        if (!this.nodeMap[positiveNode]) {
+            this.nodeMap[positiveNode] = [];
+            this.nodes.push(positiveNode);
+        }
 
-        // Push the new component onto the components array
-        this.components.push(component);
+        if (!this.nodeMap[negativeNode]) {
+            this.nodeMap[negativeNode] = [];
+            this.nodes.push(negativeNode);
+        }
 
-        // push the component into the nodes hash
-        for (i = 0, ii = nodeLabels.length; i < ii; i++) {
-            node = nodeLabels[i];
-            if (!this.nodeMap[node]) {
-                this.nodeMap[node] = [];
-                this.nodes.push(node);
-            }
-            this.nodeMap[node].push(component);
+        if (!this.referenceNode) {
+            this.setReferenceNode(negativeNode);
         }
     };
 
-    CiSo.prototype.addVoltageSource = function (id, voltage, positiveNode, negativeNode, frequency) {
-        var source = new VoltageSource(id, voltage, positiveNode, negativeNode, frequency);
->>>>>>> 4a99a52f89755e30aaddc07255f8a9c2634f4da8
-        this.voltageSources.push(source);
+    CiSo.prototype.addCurrentSource = function (id, Current, positiveNode, negativeNode, frequency, array) {
+        this.frequency = frequency;
+        var source = new CurrentSource(id, Current, positiveNode, negativeNode, frequency, array);
+        this.currentSources.push(source);
 
         if (!this.nodeMap[positiveNode]) {
             this.nodeMap[positiveNode] = [];
@@ -263,10 +277,10 @@
 
     CiSo.prototype.createEmptyAMatrix = function () {
         var cZero = $Comp(0, 0),
-				numNodes = this.nodes.length,
-				numSources = this.voltageSources.length,
-				arraySize = numNodes - 1 + numSources,
-				i, j;
+                numNodes = this.nodes.length,
+                numVoltageSources = this.voltageSources.length,
+                arraySize = numNodes - 1 + numVoltageSources,
+                i, j;
 
         this.AMatrix = [];
 
@@ -278,21 +292,31 @@
         }
     };
 
+
     CiSo.prototype.addGMatrix = function () {
+
         var source, frequency,
-				i, j,
-				node, index,
-				rowIndex, colIndex;
+                i, j,
+                node, index,
+                rowIndex, colIndex;
+
         if (this.voltageSources.length > 0) {
             source = this.voltageSources[0];
             frequency = source.frequency;
         }
+
+        else if (this.currentSources.length > 0) {
+            source = this.currentSources[0];
+            frequency = source.frequency;
+        }
+
         for (i = 0; i < this.nodes.length; i++) {
             node = this.nodes[i];
             if (node === this.referenceNode) continue;
             index = this.getNodeIndex(node);
             this.AMatrix[index][index] = this.getDiagonalMatrixElement(node, frequency);
         }
+
         for (i = 0; i < this.components.length; i++) {
             rowIndex = this.getNodeIndexes(this.components[i])[0];
             colIndex = this.getNodeIndexes(this.components[i])[1];
@@ -302,12 +326,12 @@
     };
 
     CiSo.prototype.addBCMatrix = function () {
-        if (this.voltageSources.length === 0) return;
+        if (this.voltageSources.length === 0 && this.currentSources.length === 0) return;
 
         var one = $Comp(1, 0),
-				neg = one.negative(),
-				sources = this.voltageSources,
-				source, posNode, negNode, nodeIndex, i;
+                neg = one.negative(),
+                sources = this.voltageSources,
+                source, posNode, negNode, nodeIndex, i;
 
         for (i = 0; i < sources.length; i++) {
             source = sources[i];
@@ -326,17 +350,15 @@
         }
     };
 
-<<<<<<< HEAD
     CiSo.prototype.createZMatrix = function (time) {
-=======
-    CiSo.prototype.createZMatrix = function () {
->>>>>>> 4a99a52f89755e30aaddc07255f8a9c2634f4da8
         var cZero = $Comp(0, 0),
-				numNodes = this.nodes.length,
-				numSources = this.voltageSources.length,
-				arraySize = numNodes - 1 + numSources,
-				sources = this.voltageSources,
-				i;
+                numNodes = this.nodes.length,
+                numVoltageSources = this.voltageSources.length;
+                numSources = this.voltageSources.length + this.currentSources.length,
+                arraySize = numNodes - 1 + numVoltageSources,
+                sources = this.voltageSources;
+        var i, j;
+        var nodeIndex;
 
         this.ZMatrix = [[]];
 
@@ -344,37 +366,66 @@
             this.ZMatrix[0][i] = cZero.copy()
         }
 
-<<<<<<< HEAD
         if (time >= 0) {
             for (i = 0; i < sources.length; i++) {
                 if (sources[i].frequency >= 0)
-                    this.ZMatrix[0][numNodes - 1 + i].real = (sources[i].voltage * Math.cos(twoPi * sources[i].frequency * time));
+                    this.ZMatrix[0][numNodes - 1 + i].real = (sources[i].Voltage * Math.cos(twoPi * sources[i].frequency * time));
                 else
                     if (-1 * time * sources[i].frequency <= sources[i].array.length)
-                        this.ZMatrix[0][numNodes - 1 + i].real = (sources[i].array[-1 * Math.ceil(time * sources[i].frequency)]); //negative frequency implies that the input is a step input with each voltage staying constant for a time preiod equal to 1/|frequency|
+                        this.ZMatrix[0][numNodes - 1 + i].real = (sources[i].array[-1 * Math.ceil(time * sources[i].frequency)]); //negative frequency implies that the input is a step input with each Voltage staying constant for a time preiod equal to 1/|frequency|
                     else
-                        this.ZMatrix[0][numNodes - 1 + i].real = sources[i].voltage;
+                        this.ZMatrix[0][numNodes - 1 + i].real = sources[i].Voltage;
             }
-=======
-        for (i = 0; i < sources.length; i++) {
-            this.ZMatrix[0][numNodes - 1 + i].real = sources[i].voltage;
->>>>>>> 4a99a52f89755e30aaddc07255f8a9c2634f4da8
         }
+
+        sources = this.currentSources;
+
+        for (i = 0; i < sources.length; i++) {
+            source = sources[i];
+            posNode = source.positiveNode;
+            if (posNode !== this.referenceNode) {
+                nodeIndex = this.getNodeIndex(posNode);
+                if (time >= 0) {
+                    if (sources[i].frequency >= 0)
+                        this.ZMatrix[0][nodeIndex].real = (sources[i].Current * Math.cos(twoPi * sources[i].frequency * time));
+                    else
+                        if (-1 * time * sources[i].frequency <= sources[i].array.length)
+                            this.ZMatrix[0][nodeIndex].real = (sources[i].array[-1 * Math.ceil(time * sources[i].frequency)]); //negative frequency implies that the input is a step input with each Voltage staying constant for a time preiod equal to 1/|frequency|
+                        else
+                            this.ZMatrix[0][nodeIndex].real = sources[i].Current;
+                    
+                }
+            }
+
+            else {
+                nodeIndex = this.getNodeIndex(negNode);
+                if (time >= 0) {
+                    if (sources[i].frequency >= 0)
+                        this.ZMatrix[0][nodeIndex].real = -1*(sources[i].Current * Math.cos(twoPi * sources[i].frequency * time));
+                    else
+                        if (-1 * time * sources[i].frequency <= sources[i].array.length)
+                            this.ZMatrix[0][nodeIndex].real = -1*(sources[i].array[-1 * Math.ceil(time * sources[i].frequency)]); //negative frequency implies that the input is a step input with each Voltage staying constant for a time preiod equal to 1/|frequency|
+                        else
+                            this.ZMatrix[0][nodeIndex].real = -1*sources[i].Current;
+                    
+                }
+            }
+        }   
     };
 
     /**
-	 * Here we delete any nodes, components and voltage sources that have
-	 * no connection to the reference node.
-	 */
+     * Here we delete any nodes, components and Voltage sources that have
+     * no connection to the reference node.
+     */
     CiSo.prototype.cleanCircuit = function () {
         var nodes = this.nodes,
-				nodeMap = this.nodeMap,
-				components = this.components,
-				component,
-				referenceNode = this.referenceNode,
-				knownConnectedNodes = [],
-				source,
-				node, i, ii;
+                nodeMap = this.nodeMap,
+                components = this.components,
+                component,
+                referenceNode = this.referenceNode,
+                knownConnectedNodes = [],
+                source,
+                node, i, ii;
 
         function clone(arr) {
             var cln = []
@@ -396,10 +447,10 @@
 
         function canReachReferenceNode(node, nodeMap) {
             var connectedComponents = nodeMap[node],
-					component, compNodes,
-					connectedNodes = [],
-					didRemove,
-					i, ii, j, jj;
+                    component, compNodes,
+                    connectedNodes = [],
+                    didRemove,
+                    i, ii, j, jj;
 
             if (node === referenceNode) return true;
 
@@ -443,7 +494,7 @@
 
         function removeComponentFromNodeMap(component, node) {
             var components = clone(nodeMap[node]),
-					i, ii;
+                    i, ii;
             nodeMap[node] = [];
             for (i = 0, ii = components.length; i < ii; i++) {
                 if (components[i].id !== component.id) {
@@ -455,16 +506,11 @@
 
         for (i = 0, ii = components.length; i < ii; i++) {
             component = components[i];
-<<<<<<< HEAD
             if (!(~nodes.indexOf(component.nodes[0]) && ~nodes.indexOf(component.nodes[1])) && component.type != "MOSFET" && component.type != "Transistor") {
-=======
-            if (!(~nodes.indexOf(component.nodes[0]) && ~nodes.indexOf(component.nodes[1]))) {
->>>>>>> 4a99a52f89755e30aaddc07255f8a9c2634f4da8
                 removeComponentFromNodeMap(component, component.nodes[0]);
                 removeComponentFromNodeMap(component, component.nodes[1]);
                 components[i] = null;
             }
-<<<<<<< HEAD
 
             else if (!(~nodes.indexOf(component.nodes[0]) && ~nodes.indexOf(component.nodes[1]) && ~nodes.indexOf(component.nodes[2])) && (component.type === "Transistor" || component.type === "MOSFET")) {
                 removeComponentFromNodeMap(component, component.nodes[0]);
@@ -472,13 +518,11 @@
                 removeComponentFromNodeMap(component, component.nodes[1]);
                 components[i] = null;
             }
-=======
->>>>>>> 4a99a52f89755e30aaddc07255f8a9c2634f4da8
         }
 
         this.components = squash(components);
 
-        // Remove all voltage sources that aren't attached to two reachable nodes
+        // Remove all Voltage sources that aren't attached to two reachable nodes
         for (i = 0, ii = this.voltageSources.length; i < ii; i++) {
             source = this.voltageSources[i];
             if (!(~nodes.indexOf(source.positiveNode) && ~nodes.indexOf(source.negativeNode))) {
@@ -488,40 +532,40 @@
 
         this.voltageSources = squash(this.voltageSources);
 
+        for (i = 0, ii = this.currentSources.length; i < ii; i++) {
+            source = this.currentSources[i];
+            if (!(~nodes.indexOf(source.positiveNode) && ~nodes.indexOf(source.negativeNode))) {
+                this.currentSources[i] = null;
+            }
+        }
+
+        this.currentSources = squash(this.currentSources);
+
         // Reset reference node index
         this.referenceNodeIndex = this.nodes.indexOf(referenceNode);
     };
 
-<<<<<<< HEAD
     CiSo.prototype.solve = function (time) {
 
 
         var impedance_string = "Impedance - ";
         components = this.components;
-        sources = this.voltageSources;
+        voltageSources = this.voltageSources;
+        currentSources = this.currentSources;
         var frequency = Math.max(Math.abs(this.frequency), 1000);
         var res_array = [];
         var time_0 = 0;
-=======
-    CiSo.prototype.solve = function () {
-
-        components = this.components;
->>>>>>> 4a99a52f89755e30aaddc07255f8a9c2634f4da8
 
         this.cleanCircuit();
 
         this.createAMatrix();
-<<<<<<< HEAD
         this.createZMatrix(time_0);
-=======
-        this.createZMatrix();
->>>>>>> 4a99a52f89755e30aaddc07255f8a9c2634f4da8
 
         aM = $M(this.AMatrix);
         zM = $M(this.ZMatrix);
         invAM = aM.inv();
-<<<<<<< HEAD
         var res_previous = zM.x(invAM);
+        var j, jj;
 
         while (time_0 <= time) {
 
@@ -552,27 +596,59 @@
 
                     if (component.type === "Capacitor") {
                         if (time_0 === 0)
-                            dark_current = 0; //dark_current for capacitor stores state corresponding to charge => all caps are uncharged at time = 0
+                            component.charge = 0; // stores state corresponding to charge => all caps are uncharged at time = 0
                         else {
-                            var sources = this.voltageSources;
+                            var voltageSources = this.voltageSources;
                             var sourceIndex = null;
-                            var current = null;
+                            var Current = null;
 
-                            for (i = 0, ii = sources.length; i < ii; i++) {
-                                if (sources[i].id == component.id) {
-                                    sourceIndex = i;
+                            for (j = 0, jj = voltageSources.length; j < jj; j++) {
+                                if (voltageSources[j].id == component.id + "VoltageSource") {
+                                    sourceIndex = j;
                                     break;
                                 }
                             }
 
-                            current = res_previous.elements[0][this.nodes.length - 1 + sourceIndex];
+                            Current = res_previous.elements[0][this.nodes.length - 1 + sourceIndex];
 
-                            dark_current = dark_current + 0.01 * current.real / frequency;
+                            component.charge = component.charge + 0.1 * Current.real / frequency;
 
-                            sources[sourceIndex].voltage = dark_current / value;
+                            voltageSources[sourceIndex].Voltage = component.charge / value;
                         }
                     }
 
+
+                    else if (component.type === "Inductor") {
+                        if (time_0 === 0)
+                            component.flux = 0; //stores state corresponding to flux => all inductors are unmagnetized at time = 0
+                        else {
+                            var currentSources = this.currentSources;
+                            var sourceIndex = null;
+                            var Voltage = null;
+
+
+
+                            for (j = 0, jj = currentSources.length; j < jj; j++) {
+                                if (currentSources[j].id == component.id + "CurrentSource") {
+                                    sourceIndex = j;
+                                    break;
+                                }
+                            }
+                            
+
+                            if (index1 != -1 && index2 != -1)
+                                Voltage = res_previous.elements[0][index1] - res_previous.elements[0][index2];
+                            else if (index1 === -1)
+                                Voltage = -res_previous.elements[0][index2];
+                            else
+                                Voltage = res_previous.elements[0][index1];
+
+
+                            component.flux = component.flux - 0.1 * Voltage.real / frequency;
+                                                                                    
+                            currentSources[sourceIndex].Current = component.flux / value;
+                        }
+                    }
 
                     if (component.type === "Resistor" && nodes.length === 3) { // Indicates that the resistor is an abstraction of a MOSFET
                         var gate = nodes[1];
@@ -613,7 +689,6 @@
 
                         component.value = value;
                         component.value_reverse = value_reverse;
-                        component.dark_current = dark_current;
                         components[i] = component;
                         this.cleanCircuit();
                         this.createAMatrix();
@@ -621,7 +696,7 @@
                         aM = $M(this.AMatrix);
                         zM = $M(this.ZMatrix);
                         invAM = aM.inv();
-                        res = zM.x(invAM);
+                        res = zM.x(invAM); 
                     }
 
                     if (component.type === "Diode") {
@@ -811,7 +886,7 @@
 
             res_array.push(res);
             res_previous = res;
-            time_0 = time_0 + 0.001 / frequency;
+            time_0 = time_0 + 0.1 / frequency;
             res_array_state = res_array;
 
         }
@@ -821,113 +896,65 @@
     };
 
     CiSo.prototype.getVoltageAt = function (node, time) {
-=======
-        res = zM.x(invAM);
-
-
-        var check = true, i, ii, temp;
-        while (check === true) {
-            check = false;
-            for (i = 0, ii = components.length; i < ii; i++) {
-                var component = components[i];
-                var nodes = component.nodes;
-                var node1 = nodes[0];
-                var node2 = nodes[1];
-                var index1 = this.getNodeIndex(node1);
-                var index2 = this.getNodeIndex(node2);
-                var frequency = this.frequency;
-                var time = this.time;
-                if (component.type === "Diode") {
-                    if (index1 != -1 && index2 != -1) {
-                        if (((res.elements[0][index1]).real - (res.elements[0][index2]).real < 0 && (component.value < component.value_reverse)) || ((res.elements[0][index1]).real - (res.elements[0][index2]).real > 0 && (component.value > component.value_reverse))) {
-                            temp = component.value_reverse;
-                            component.value_reverse = component.value;
-                            component.value = temp;
-
-                            check = true;
-                        }
-                    }
-
-                    else if (index1 === -1) {
-                        if ((res.elements[0][index2].real > 0 && (component.value < component.value_reverse)) || (res.elements[0][index2].real < 0 && (component.value > component.value_reverse))) {
-                            temp = component.value_reverse;
-                            component.value_reverse = component.value;
-                            component.value = temp;
-
-                            check = true;
-                        }
-                    }
-
-                    else if (index2 === -1) {
-                        if ((res.elements[0][index1].real < 0 && (component.value < component.value_reverse)) || (res.elements[0][index1].real > 0 && (component.value > component.value_reverse))) {
-                            temp = component.value_reverse;
-                            component.value_reverse = component.value;
-                            component.value = temp;
-
-                            check = true;                          
-                        }
-                    }
-
-
-                    components[i] = component;
-                    this.cleanCircuit();
-                    this.createAMatrix();
-                    aM = $M(this.AMatrix);
-                    zM = $M(this.ZMatrix);
-                    invAM = aM.inv();
-                    res = zM.x(invAM);
-                }
-            }
-        } // when the iteration ends, the diode biases are correctly determined
-
-        return res;
-    };
-
-    CiSo.prototype.getVoltageAt = function (node) {
->>>>>>> 4a99a52f89755e30aaddc07255f8a9c2634f4da8
         if (node === this.referenceNode) {
-            return $Comp(0);
+            return 0;
         }
         try {
-<<<<<<< HEAD
             var res_array = this.solve(time);
-            var res = res_array[Math.ceil(time * 100 * Math.max(this.frequency, 1000))];
-=======
-            var res = this.solve();
->>>>>>> 4a99a52f89755e30aaddc07255f8a9c2634f4da8
-            return res.elements[0][this.getNodeIndex(node)];
+            var res = res_array[res_array.length - 1];
+            return res.elements[0][this.getNodeIndex(node)].real;
         } catch (e) {
-            return $Comp(0);
+            return 0;
         }
     };
 
-<<<<<<< HEAD
+    CiSo.prototype.getVoltageAt_array = function (node, time) {
+
+        var i;
+        var res_array = this.solve(time);
+        var voltage_array = [];
+        
+        for (i = 0; i < res_array.length; i++) {
+
+            if (node === this.referenceNode) {
+                voltage_array.push(0);
+            }
+
+            voltage_array.push(res_array[i].elements[0][this.getNodeIndex(node)].real);
+        
+        }
+
+        return voltage_array;
+    };
+
     CiSo.prototype.getVoltageBetween = function (node1, node2, time) {
-        return this.getVoltageAt(node1, time).subtract(this.getVoltageAt(node2, time));
+        return (this.getVoltageAt(node1, time) - this.getVoltageAt(node2, time));
+    };
+
+    CiSo.prototype.getVoltageBetween_array = function (node1, node2, time) {
+        var voltage1 = this.getVoltageAt_array(node1, time);
+        var voltage2 = this.getVoltageAt_array(node2, time);
+        var voltage_array = [];
+
+        var i = 0;
+
+        while (i < voltage1.length) {
+            voltage_array.push(voltage1[i] - voltage2[i]);
+        }
+        return voltage_array;
     };
 
     CiSo.prototype.getCurrent = function (voltageSource, time) {
-=======
-    CiSo.prototype.getVoltageBetween = function (node1, node2) {
-        return this.getVoltageAt(node1).subtract(this.getVoltageAt(node2));
-    };
-
-    CiSo.prototype.getCurrent = function (voltageSource) {
->>>>>>> 4a99a52f89755e30aaddc07255f8a9c2634f4da8
         var res,
-				sources,
-				sourceIndex = null,
-				i, ii;
+                sources,
+                sourceIndex = null,
+                i, ii;
 
         try {
-<<<<<<< HEAD
             var res_array = this.solve(time);
             res = res_array[Math.ceil(time * 100 * Math.max(this.frequency, 1000))];
-=======
-            res = this.solve();
->>>>>>> 4a99a52f89755e30aaddc07255f8a9c2634f4da8
         } catch (e) {
-            return $Comp(0);
+            return 0;
         }
 
         sources = this.voltageSources
@@ -941,24 +968,21 @@
 
         if (sourceIndex === null) {
             try {
-                throw Error("No voltage source " + voltageSource);
+                throw Error("No Voltage source " + voltageSource);
             } catch (e) {
-                return $Comp(0);
+                return 0;
             }
         }
 
         try {
-            return res.elements[0][this.nodes.length - 1 + sourceIndex];
+            return res.elements[0][this.nodes.length - 1 + sourceIndex].real;
         } catch (e) {
-            return $Comp(0);
+            return 0;
         }
     }
 
-<<<<<<< HEAD
 
 
-=======
->>>>>>> 4a99a52f89755e30aaddc07255f8a9c2634f4da8
     window.CiSo = CiSo;
 })();
 
