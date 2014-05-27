@@ -1,0 +1,25 @@
+{
+  "name": "circuit-solver",
+  "version": "1.0.0",
+  "homepage": "https://github.com/concord-consortium/circuit-solver",
+  "authors": [
+    "Sam Fentress <sfentress@concord.org>"
+  ],
+  "description": "A Javascript DC and AC linear circuit solver",
+  "main": "dist/circuitSolver.js",
+  "moduleType": [
+    "globals"
+  ],
+  "keywords": [
+    "circuit",
+    "electronics"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
