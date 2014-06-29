@@ -28,9 +28,12 @@ beforeEach(function() {
     toBeAbout: function(val) {
       function toSigFigs (num, sigFigs) {
         num = num.toPrecision(sigFigs);
-        return sigFigs > Math.log(num) * Math.LOG10E ? num : ""+parseFloat(num);
+        return sigFigs > Math.log(num) * Math.LOG10E ? num : "" + parseFloat(num);
       }
-      return toSigFigs(this.actual, 3) === toSigFigs(val, 3)
+      return (Math.abs(this.actual - val) / val < 0.1 && Math.abs(this.actual - val) / this.actual < 0.1) || (val == 0 && this.actual == 0)// 10% senstivity
+    },
+    toBeWithin25percent: function(val) {
+      return (Math.abs(this.actual - val) / val < 0.25 && Math.abs(this.actual - val) / this.actual < 0.25) || (val == 0 && this.actual == 0)// 25% senstivity
     },
     toBeArray: function(arr) {
       var act = this.actual;
